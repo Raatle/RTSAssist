@@ -1,0 +1,52 @@
+{
+	# Create Selection Event
+	"ui_command_select_command_ui_icon": [
+		{"file":"sounds/sfx_interface/ui_command_select_command_ui_icon.ogg","pitch":1,"volume":1},
+	],
+	# Deselect
+	"ui_command_selection_cleared": [
+		{"file":"sounds/sfx_interface/ui_command_selection_cleared.ogg","pitch":1,"volume":1},
+	],
+	# Preview Selection
+	"ui_type": [
+		{"file":"sounds/sfx_interface/ui_type.ogg","pitch":1,"volume":1},
+	],
+	# Create standard Assignment
+	"ui_channel_intel_assessment_01": [
+		{"file":"sounds/sfx_interface/ui_channel_intel_assessment_01.ogg","pitch":1,"volume":1},
+	],
+	# Create secondary Assignment
+	"ui_channel_news_04": [
+		{"file":"sounds/sfx_interface/ui_channel_news_04.ogg","pitch":1,"volume":1},
+	],
+	# Create temporary Assignment
+	"ui_channel_default_04": [
+		{"file":"sounds/sfx_interface/ui_channel_default_04.ogg","pitch":1,"volume":1},
+	],
+	# Delete Assignment
+	"ui_channel_default_02": [
+		{"file":"sounds/sfx_interface/ui_channel_default_02.ogg","pitch":1,"volume":1},
+	],
+	# Save Assignments
+	"ui_channel_comm_secure_01": [
+		{"file":"sounds/sfx_interface/ui_channel_comm_secure_01.ogg","pitch":1,"volume":1},
+	],
+	# Load Assignments
+	"ui_channel_comm_local_01": [
+		{"file":"sounds/sfx_interface/ui_channel_comm_local_01.ogg","pitch":1,"volume":1},
+	],
+	# Rotate Assignments
+	"survey_result_01": [
+		{"file":"sounds/sfx_interface/survey_result_01.ogg","pitch":1,"volume":1},
+	],
+	# Translate Assignments
+	"ui_channel_sniffer_01": [
+		{"file":"sounds/sfx_interface/ui_channel_sniffer_01.ogg","pitch":1,"volume":1},
+	],
+	# Target Enemy
+	"ui_channel_comm_local_04": [
+		{"file":"sounds/sfx_interface/ui_channel_comm_local_04.ogg","pitch":1,"volume":1},
+	],
+
+
+}
