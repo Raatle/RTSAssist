@@ -18,3 +18,6 @@ Finally, I hope you enjoy it. It has been a project of mine for a long, long tim
 you are having trouble micromanaging ships remember the AI is fully capable without you
 and sometimes just a little influence makes all the difference.
 
+NOTE: The src file in this directory is only updated on digit releases i.e., 0.1.5 to 0.1.6
+will update. 0.1.5a to 0.1.5b will not. The latest src file is found in the latest release.
+
