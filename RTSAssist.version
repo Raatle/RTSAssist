@@ -1,13 +1,13 @@
 {
-    "modName": "RTSAssist",
-    "changelogURL": "https://raw.githubusercontent.com/Raatle/RTSAssist/refs/heads/main/ChangeLog.txt",
     "masterVersionFile": "https://raw.githubusercontent.com/Raatle/RTSAssist/refs/heads/main/RTSAssist.version",
+    "modName": "RTSAssist",
+    "modThreadId": 32007,
     "directDownloadURL": "https://github.com/Raatle/RTSAssist/releases/latest/download/RTSAssist.zip",
-    "modThreadId": "32007",
+    "changelogURL": "https://raw.githubusercontent.com/Raatle/RTSAssist/refs/heads/main/ChangeLog.txt",
     "modVersion":
     {
         "major":0,
         "minor":1,
-        "patch":5
-    }
+        "patch":5,
+    },
 }
