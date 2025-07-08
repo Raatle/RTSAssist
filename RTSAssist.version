@@ -6,8 +6,8 @@
     "changelogURL": "https://raw.githubusercontent.com/Raatle/RTSAssist/refs/heads/main/ChangeLog.txt",
     "modVersion":
     {
-        "major":0,
-        "minor":1,
-        "patch":5,
+        "major":"0",
+        "minor":"1",
+        "patch":"5d",
     },
 }
