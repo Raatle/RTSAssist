@@ -1,9 +1,9 @@
 {
-    "changelogURL":"",
-    "masterVersionFile":"",
-    "modName":"RTSAssist",
-    "modNexusId":?,
-    "modThreadId":?,
+    "modName": "RTSAssist",
+    "changelogURL": "https://raw.githubusercontent.com/Raatle/RTSAssist/refs/heads/main/ChangeLog.txt",
+    "masterVersionFile": "https://raw.githubusercontent.com/Raatle/RTSAssist/refs/heads/main/RTSAssist.version",
+    "directDownloadURL": "https://github.com/Raatle/RTSAssist/releases/latest/download/RTSAssist.zip",
+    "modThreadId": "32007",
     "modVersion":
     {
         "major":0,
