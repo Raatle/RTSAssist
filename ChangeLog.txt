@@ -1,1 +1,5 @@
-https://fractalsoftworks.com/forum/index.php?topic=32007.msg469963#msg469963
+Full Changelog: https://fractalsoftworks.com/forum/index.php?topic=32007.msg469963#msg469963
+
+Latest:
+* Added support for the StarWars ship pack.
+* Reverted an accidental change to the default hotkey for switching modes.
