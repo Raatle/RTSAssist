@@ -2,7 +2,7 @@
     "id":"RTSAssist",
     "name":"RTSAssist",
     "author":"Raatle",	
-    "version":"0.1.5",
+    "version":"0.1.6",
     "description":"An RTS conversion for Starsector",
     "gameVersion": "0.98a-RC8",
     "dependencies": [
@@ -14,4 +14,5 @@
     ],
     "jars":["jars/RTSAssist.jar"],
     "modPlugin":"data.scripts.RTSAssistModPlugin",
+
 }
