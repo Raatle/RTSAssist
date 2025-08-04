@@ -1,5 +1,10 @@
 Full Changelog: https://fractalsoftworks.com/forum/index.php?topic=32007.msg469963#msg469963
 
+Version 0.1.6a Patch notes
+
+Fixed crash on save/load assignments.
+Added back the ability to diable mod for users who have save files created with v0.1.5 or lower.
+
 Version 0.1.6 Patch notes
 
 Support for LunaLib:
