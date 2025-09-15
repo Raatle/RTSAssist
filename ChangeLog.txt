@@ -1,60 +1,10 @@
 Full Changelog: https://fractalsoftworks.com/forum/index.php?topic=32007.msg469963#msg469963
 
-Version 0.1.6a Patch notes
-
-Fixed crash on save/load assignments.
-Added back the ability to diable mod for users who have save files created with v0.1.5 or lower.
-
-Version 0.1.6 Patch notes
-
-Support for LunaLib:
-
-    LunaLib is now fully supported.
-    Both hotkeys and settings can be adjusted in the Luna GUI, in the main menu.
-    All hotkey and settings changes made using Luna will persist even after updating or removing and re-adding this mod.
-    The original hotkeys and config file still function for those not using Luna, and for those that are, will act as a defaults settings file.
-
-
-Save Preservation:
-
-    RTSAssist no longer breaks saves on removal and can be freely added or removed at any time.
-    Unfortunately this only applies to saved games created on RTSAssist versions of 0.1.6 or higher.
-
-
-Ship Selection:
-
-    Selecting ships, both ally and enemy has been problematic in the past. It is now in a far better place.
-    New Setting: Selection Tolerance. If a player often tries to a click a ship and misses, this setting can be increased and should remedy that problem. Setting this to 1 removes this feature.
-    Previously, ordering a ship to attack at an angle often required a player to pause the game, as if the target ship had moved before finalising the order, it would instead add a dynamic hold on flux command. This is fixed. Take all the time you want selecting that perfect angle.
-
-
-Newly Supported Mods:
-
-    Apex Design Collective
-    Halo Dynamics Ship Industry
-    Interstellar Imperium
-    Everybody Loves the Ko Combine
-    Experimental Ship Pack/ Machina Void Services
-    Phillip Andrada Gas Station Manager
-    ScalarTech Solutions
-    SCY
-    Secrets of the Frontier
-    Volkov Industrial Conglomerate
-
-
-Various Fixes and Changes:
-
-    Added a fix for CTD on ship death
-    Systems that are not togglable can no longer be deactivated.
-    Ships can be be given a assignment and ordered to use their system on the same frame.
-    Ships with togglable systems, if manually activated, would no longer obey RTS system logic. This is fixed.
-    Previously ships with systems that could not be deactivated could be deactivated using the RTSAssist. This is fixed.
-    Remembering zoom on mode switch is now disabled by default. Can be reenabled in Luna or the config file.
-
-
-Known Issues:
-
-    Switching right click and double click behaviour is bugged temporarily disabled.
-    Moving the mouse outside the screen causes it to scroll indefinately.
-    Queueing a dynamicHoldOnFlux queues a moveAndHold instead.
-    Video feed not working.
+Version 0.1.6c Patch notes
+    In windowed mode, mouse can be moved outside screen and scrolling will stop.
+    Initial camera position fine tuned and fixed.
+    Better support for speedup. Known issue: bullet time not supported.
+    Added support for modded ships with no systems.
+    RTSAssist disabled during Graphics lib bench.
+    Zoom level unlocked and fixed. The ui will no longer break at very high zoom.
+    Various minor bug fixes.
