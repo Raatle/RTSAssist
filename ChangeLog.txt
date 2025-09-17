@@ -8,3 +8,6 @@ Version 0.1.6c Patch notes
     RTSAssist disabled during Graphics lib bench.
     Zoom level unlocked and fixed. The ui will no longer break at very high zoom.
     Various minor bug fixes.
+
+Version 0.1.6d Patch notes
+    Fixed multiple UI issues for users that were using screenscaling.
