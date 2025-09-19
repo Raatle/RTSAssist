@@ -15,3 +15,4 @@ Version 0.1.6d Patch notes
 Version 0.1.6e Patch notes
     Fixed a crash associated with mod interactions that led to ships toggling their weapons between usable and not usable states.
     0.1.6c introduced a camera panning bug when selecting phased ships. This is fixed.
+    Added better support for ships that either only used missile weapons or only point defense or only a combination of the two.
