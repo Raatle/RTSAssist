@@ -1,14 +1,5 @@
 Full Changelog: https://fractalsoftworks.com/forum/index.php?topic=32007.msg469963#msg469963
 
-Version 0.1.6c Patch notes
-    In windowed mode, mouse can be moved outside screen and scrolling will stop.
-    Initial camera position fine tuned and fixed.
-    Better support for speedup. Known issue: bullet time not supported.
-    Added support for modded ships with no systems.
-    RTSAssist disabled during Graphics lib bench.
-    Zoom level unlocked and fixed. The ui will no longer break at very high zoom.
-    Various minor bug fixes.
-
 Version 0.1.6d Patch notes
     Fixed multiple UI issues for users that were using screenscaling.
 
@@ -16,3 +7,8 @@ Version 0.1.6e Patch notes
     Fixed a crash associated with mod interactions that led to ships toggling their weapons between usable and not usable states.
     0.1.6c introduced a camera panning bug when selecting phased ships. This is fixed.
     Added better support for ships that either only used missile weapons or only point defense or only a combination of the two.
+
+Version 0.1.6f Patch notes
+    Reworked input framework. All hotkeys can be rebound except modifiers (shift, control and alt).
+    Translating and Rotating heavily reworked. Behaviour improved and more consistant.
+    New config option, alternative rotation, that requires less user input.
