@@ -12,3 +12,6 @@ Version 0.1.6f Patch notes
     Reworked input framework. All hotkeys can be rebound except modifiers (shift, control and alt).
     Translating and Rotating heavily reworked. Behaviour improved and more consistant.
     New config option, alternative rotation, that requires less user input.
+
+Version 0.1.6g Patch notes
+    Fixed CTD introduced in the previous patch. It was produced by rebinding the "enable RTS mode" hotkey and attempting to switch modes.
