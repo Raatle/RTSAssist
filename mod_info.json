@@ -1,0 +1,18 @@
+{
+    "id":"RTSAssist",
+    "name":"RTSAssist",
+    "author":"Raatle",	
+    "version":"0.1.9",
+    "description":"An RTS conversion for Starsector",
+    "gameVersion": "0.98a-RC8",
+	"utility": "true",
+    "dependencies": [
+        {
+            "id": "lw_lazylib",
+            "name": "LazyLib",
+            #"version": "3.0.0"
+        },
+    ],
+    "jars":["jars/RTSAssist.jar"],
+    "modPlugin":"data.scripts.RTSAssistModPlugin",
+}

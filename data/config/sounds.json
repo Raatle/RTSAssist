@@ -1,0 +1,100 @@
+{
+	# Create Selection Event
+	"CreateSelectionEvent": [
+		{"file":"sounds/sfx_interface/ui_radar_detect_vessel.ogg","pitch":1,"volume":1},
+	],
+	# Deselect
+	"Deselect": [
+		{"file":"sounds/sfx_cargo/cargo_drugs_pickup.ogg","pitch":1,"volume":1},
+	],
+	# Preview Selection
+	"PreviewSelection": [
+		{"file":"sounds/sfx_interface/ui_radar_detect_missile.ogg","pitch":1,"volume":1},
+	],
+	# Create standard Assignment
+	"CreateStandardAssignment": [
+		{"file":"sounds/sfx_interface/survey_result_02.ogg","pitch":1,"volume":1},
+	],
+	# Create secondary Assignment
+	"CreateSecondaryAssignment": [
+		{"file":"sounds/sfx_interface/ui_channel_news_04.ogg","pitch":1,"volume":1},
+	],
+	# Create temporary Assignment
+	"CreateTemporaryAssignment": [
+		{"file":"sounds/sfx_cargo/cargo_food_pickup.ogg","pitch":1,"volume":1},
+	],
+	# Delete Assignment
+	"DeleteAssignment": [
+		{"file":"sounds/sfx_interface/ui_channel_default_02.ogg","pitch":1,"volume":1},
+	],
+	# Save Assignments
+	"SaveAssignments": [
+		{"file":"sounds/sfx_interface/survey_scan_01.ogg","pitch":1,"volume":1},
+	],
+	# Load Assignments
+	"LoadAssignments": [
+		{"file":"sounds/sfx_interface/survey_scan_02.ogg","pitch":1,"volume":1},
+	],
+	# Rotate Assignments
+	"RotateAssignments": [
+		{"file":"sounds/sfx_cargo/cargo_ore_rare_pickup.ogg","pitch":1,"volume":1},
+	],
+	# Translate Assignments
+	"TranslateAssignments": [
+		{"file":"sounds/sfx_wpn_energy/inimical_emanation_fire_02.ogg","pitch":1,"volume":1},
+	],
+	# Target Enemy
+	"TargetEnemy": [
+		{"file":"sounds/sfx_cargo/cargo_metals_pickup.ogg","pitch":1,"volume":1},
+	],
+	# Target Enemy Long
+	"TargetEnemyLong": [
+		{"file":"sounds/sfx_cargo/cargo_small_arms_pickup.ogg","pitch":1,"volume":1},
+	],
+	# Attack At Angle
+	"AttackAtAngle": [
+		{"file":"sounds/sfx_cargo/cargo_small_arms_drop.ogg","pitch":1,"volume":1},
+	],
+	# Attack Move
+	"AttackMove": [
+		{"file":"sounds/sfx_cargo/cargo_metals_rare_pickup.ogg","pitch":1,"volume":1},
+	],
+	# Attack Move Ship
+	"AttackMoveShip": [
+		{"file":"sounds/sfx_wpn_missiles/gorgon_dem_targeting_01.ogg","pitch":1,"volume":1},
+	],
+	# Attack Move Conversion
+	"AttackMoveConversion": [
+		{"file":"sounds/sfx_cargo/cargo_aicore_pickup.ogg","pitch":1,"volume":1},
+	],
+	# General UI Feedback 01
+	"GeneralUIFeedback01": [
+		{"file":"sounds/sfx_cargo/cargo_volatiles_pickup.ogg","pitch":1,"volume":1},
+	],
+	# Queue Assignment
+	"QueueAssignment": [
+		{"file":"sounds/sfx_impacts/fragment_defabrication_hit_01.ogg","pitch":1,"volume":1},
+	],
+	# Create Control Group
+	"CreateControlGroup": [
+		{"file":"sounds/sfx_interface/survey_result_01.ogg","pitch":1,"volume":1},
+	],
+
+}
+# Create Selection Event                : ui_command_select_command_ui_icon			: ui_radar_detect_vessel
+# Deselect								: ui_command_selection_cleared				: 
+# Preview Selection						: ui_type									: ui_radar_detect_missile
+# Create standard Assignment			: ui_channel_intel_assessment_01			: charscreen-revert
+# Create secondary Assignment			: ui_channel_news_04						: 
+# Create temporary Assignment			: ui_channel_default_04						: ui_channel_news_03
+# Delete Assignment						: ui_channel_default_02						: 
+# Save Assignments						: ui_channel_comm_secure_01					: survey_scan_01
+# Load Assignments						: ui_channel_comm_local_01					: survey_scan_02
+# Rotate Assignments					: survey_result_01							: perform_survey_ore_02
+# Translate Assignments					: ui_channel_sniffer_01						: perform_survey_ore_03
+# Target Enemy							: ui_channel_comm_local_04					: perform_survey_hit_01
+# Attack move 							: gorgon_dem_targeting_01
+# Create Control Group 					: survey_result_01
+# General UI Feedback 01				: cargo_volatiles_pickup
+# Attack Move Conversion				: cargo_aicore_pickup
+# Queue Assignment						: fragment_defabrication_hit_01
