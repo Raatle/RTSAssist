@@ -1,18 +1,43 @@
 Full Changelog: https://fractalsoftworks.com/forum/index.php?topic=32007.msg469963#msg469963
 
-Version 0.1.6e Patch notes
-    Fixed a crash associated with mod interactions that led to ships toggling their weapons between usable and not usable states.
-    0.1.6c introduced a camera panning bug when selecting phased ships. This is fixed.
-    Added better support for ships that either only used missile weapons or only point defense or only a combination of the two.
+Version 0.1.9 Patch notes
 
-Version 0.1.6f Patch notes
-    Reworked input framework. All hotkeys can be rebound except modifiers (shift, control and alt).
-    Translating and Rotating heavily reworked. Behaviour improved and more consistant.
-    New config option, alternative rotation, that requires less user input.
+Reworked UI Audio:
+    Replaced sounds that were either not appropriate or annoying.
+    Added new sounds for new functionality that did not have audio feedback.
+    Adjusted individual volumes to provide and even audio experience.
+    Added a new setting to the config/Lunalib that allows the player to control the volume of audio feedback or disable it entirely.
 
-Version 0.1.6g Patch notes
-    Fixed CTD introduced in the previous patch. It was produced by rebinding the "enable RTS mode" hotkey and attempting to switch modes.
+New feature -> Broadside Adjustment:
+    Holding B allows the player to specify a preferred broadside modifier.
+    This will change how the ship behaves when given an assignment that involves attacking another ship.
+    Ships with broadside modifiers will angle their hull in such a way as specified by the broadside modifier.
+    Double Tapping and holding B will add a modifier that will allow the ship to broadside both port and starboard.
+    This modifier is persistent between battles and game restarts.
+    The hotkey for this can be changed in the config file or luna.
 
-Version 0.1.6h Patch notes
-    Added support for Outer Rim Alliance.
-    Fixed a major bug that was heavily distorting the desired ship attack range for ships with heavy broadside modifiers.
+Feature adjustment -> Attack move:
+    Attack move can now target enemy ships.
+    Ships ordered to attack move an enemy ship will attempt to engage that ship but will first engage any other enemy ship that is in between the ordered and targeted ship.
+    A less direct but safer command for ordering ships to attack.
+
+QOL Adjustment -> Parralised Disk Writes:
+For those still using ancient hardware, this will prevent any stutter associated with actions that cause RTSAssist to write to disk.
+
+
+Major bug fixes:
+    Queued attack at angle assignments now correctly use the angle that was designated when the assignment was queued.
+    When the player was using neural link, selecting any other ships other than either of the neural linked ships would cause the neural linked ships to longer be captained by the player.
+    Somewhere in the previous patch, extended support for speedUp was added. This did in fact not only not add that extended support but also broke time warp in general.. Fixed.
+    An extended list of bug fixes can be found here: https://github.com/Raatle/RTSAssist/releases/tag/v0.1.9_98a.
+
+RTSAssist Modding API -> Support:
+    Modders are now able to add RTSAssist support to their own mods in they desire it.
+    This includes when ships should use their systems and how they should broadside.
+    Find a folder in the RTSAssist folder that contains a README and an example on how to implement this.
+    The ship testing tools that I built for testing ships can now also be enabled in LUNA. See the modding README for details.
+
+
+Upcoming:
+The current user interface for RTSAssist is temporary and looks like ass.
+Version 0.2 will aim to add a user interface that not only feels genuine, but will also add more information to the screen in such a way that is not invasive and also allows the player to make better descisions with his APM. This will include a reworked HUD, custom minimap, reworked audio and upgraded selection circles, target indicators etc. If you have any additional ideas, drop a post in the comments.
