@@ -1,0 +1,11 @@
+{
+    "id":"testMod",
+    "name":"testMod",
+    "author":"Raatle",	
+    "version":"1.0",
+    "description":"testing platform",
+    "gameVersion": "0.98a-RC5",
+    "dependencies": [],
+    "jars":["jars/testMod.jar"],
+	"modPlugin":"data.scripts.testModBasePlugin",
+}
