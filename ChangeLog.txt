@@ -41,3 +41,9 @@ RTSAssist Modding API -> Support:
 Upcoming:
 The current user interface for RTSAssist is temporary and looks like ass.
 Version 0.2 will aim to add a user interface that not only feels genuine, but will also add more information to the screen in such a way that is not invasive and also allows the player to make better descisions with his APM. This will include a reworked HUD, custom minimap, reworked audio and upgraded selection circles, target indicators etc. If you have any additional ideas, drop a post in the comments.
+
+
+Version 0.1.9a Patch notes
+    Fixed ships in the menu not using their engines..
+    Fixed ships not using systems when activating autopilot with either U or switching back to vanilla mode.
+    Mega ships, mostly found in mods, but also the Zigguratt, use slightly different AI and were not following commands to the T. Fixed.
