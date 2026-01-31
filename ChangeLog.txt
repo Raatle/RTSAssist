@@ -1,49 +1,5 @@
 Full Changelog: https://fractalsoftworks.com/forum/index.php?topic=32007.msg469963#msg469963
 
-Version 0.1.9 Patch notes
-
-Reworked UI Audio:
-    Replaced sounds that were either not appropriate or annoying.
-    Added new sounds for new functionality that did not have audio feedback.
-    Adjusted individual volumes to provide and even audio experience.
-    Added a new setting to the config/Lunalib that allows the player to control the volume of audio feedback or disable it entirely.
-
-New feature -> Broadside Adjustment:
-    Holding B allows the player to specify a preferred broadside modifier.
-    This will change how the ship behaves when given an assignment that involves attacking another ship.
-    Ships with broadside modifiers will angle their hull in such a way as specified by the broadside modifier.
-    Double Tapping and holding B will add a modifier that will allow the ship to broadside both port and starboard.
-    This modifier is persistent between battles and game restarts.
-    The hotkey for this can be changed in the config file or luna.
-
-Feature adjustment -> Attack move:
-    Attack move can now target enemy ships.
-    Ships ordered to attack move an enemy ship will attempt to engage that ship but will first engage any other enemy ship that is in between the ordered and targeted ship.
-    A less direct but safer command for ordering ships to attack.
-
-QOL Adjustment -> Parralised Disk Writes:
-For those still using ancient hardware, this will prevent any stutter associated with actions that cause RTSAssist to write to disk.
-
-
-Major bug fixes:
-    Queued attack at angle assignments now correctly use the angle that was designated when the assignment was queued.
-    When the player was using neural link, selecting any other ships other than either of the neural linked ships would cause the neural linked ships to longer be captained by the player.
-    Somewhere in the previous patch, extended support for speedUp was added. This did in fact not only not add that extended support but also broke time warp in general.. Fixed.
-    An extended list of bug fixes can be found here: https://github.com/Raatle/RTSAssist/releases/tag/v0.1.9_98a.
-
-RTSAssist Modding API -> Support:
-    Modders are now able to add RTSAssist support to their own mods in they desire it.
-    This includes when ships should use their systems and how they should broadside.
-    Find a folder in the RTSAssist folder that contains a README and an example on how to implement this.
-    The ship testing tools that I built for testing ships can now also be enabled in LUNA. See the modding README for details.
-
-
-Upcoming:
-The current user interface for RTSAssist is temporary and looks like ass.
-Version 0.2 will aim to add a user interface that not only feels genuine, but will also add more information to the screen in such a way that is not invasive and also allows the player to make better descisions with his APM. This will include a reworked HUD, custom minimap, reworked audio and upgraded selection circles, target indicators etc. If you have any additional ideas, drop a post in the comments.
-
-
-Version 0.1.9a Patch notes
-    Fixed ships in the menu not using their engines..
-    Fixed ships not using systems when activating autopilot with either U or switching back to vanilla mode.
-    Mega ships, mostly found in mods, but also the Zigguratt, use slightly different AI and were not following commands to the T. Fixed.
+Version 0.1.9b Patch notes
+    0.1.9a introduced a major bug that broke mobility based ship systems. Fixed.
+    Added a potential fix for a compatibility issue with a ship in Tahlan. Fix is unconfirmed but should be resolved.
