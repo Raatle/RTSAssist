@@ -3,3 +3,5 @@ Full Changelog: https://fractalsoftworks.com/forum/index.php?topic=32007.msg4699
 Version 0.1.9b Patch notes
     0.1.9a introduced a major bug that broke mobility based ship systems. Fixed.
     Added a potential fix for a compatibility issue with a ship in Tahlan. Fix is unconfirmed but should be resolved.
+Version 0.1.9c Patch notes
+    Added Support for Arma Armatura.
