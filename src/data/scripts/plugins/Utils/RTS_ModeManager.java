@@ -43,8 +43,12 @@ public class RTS_ModeManager extends RTS_StatefulClasses {
     String newShipListenerID;
     String deadShipListenerID;
     boolean newPlayerShip = false;
-    HashMap<WeaponGroupAPI, Boolean> weaponGroups = new HashMap<>();
-    Integer activeWeaponGroup = null;
+    /* Weapon group configuration (autofire per group + selected group) saved when the player last
+    *  switched a ship into RTS mode, keyed per ship. A single shared store goes stale after a command
+    *  transfer: it would get applied onto the wrong ship and be overwritten by the next ship's save,
+    *  losing each ship's own configuration. */
+    HashMap<ShipAPI, HashMap<WeaponGroupAPI, Boolean>> weaponGroupStates = new HashMap<>();
+    HashMap<ShipAPI, Integer> activeWeaponGroups = new HashMap<>();
     String changeGroupEventString;
     String blockSystemEvent = null;
 
@@ -106,16 +110,16 @@ public class RTS_ModeManager extends RTS_StatefulClasses {
         this.setState(RTS_ParseInput.stNames.RTSMode, !(Boolean)this.getState(RTS_ParseInput.stNames.RTSMode));
         /* We've switched to RTS mode */
         if ((boolean)this.getState(RTS_ParseInput.stNames.RTSMode)) {
-            this.weaponGroups.clear();
-            WeaponGroupAPI setPointer;
-            /* Save weapon group configuration */
-            for (int i = 0; i < ((ShipAPI)this.getState(RTS_ParseInput.stNames.playerShipHold)).getWeaponGroupsCopy().size(); i++) {
-                setPointer = ((ShipAPI)this.getState(RTS_ParseInput.stNames.playerShipHold)).getWeaponGroupsCopy().get(i);
-                this.weaponGroups.put(setPointer, setPointer.isAutofiring());
-                if (setPointer.equals(((ShipAPI)this.getState(RTS_ParseInput.stNames.playerShipHold)).getSelectedGroupAPI())){
-                    this.activeWeaponGroup = i;
-                }
+            ShipAPI heldShip = (ShipAPI)this.getState(RTS_ParseInput.stNames.playerShipHold);
+            /* Save weapon group configuration, for this ship only */
+            HashMap<WeaponGroupAPI, Boolean> autofireStates = new HashMap<>();
+            for (int i = 0; i < heldShip.getWeaponGroupsCopy().size(); i++) {
+                WeaponGroupAPI setPointer = heldShip.getWeaponGroupsCopy().get(i);
+                autofireStates.put(setPointer, setPointer.isAutofiring());
+                if (setPointer.equals(heldShip.getSelectedGroupAPI()))
+                    this.activeWeaponGroups.put(heldShip, i);
             }
+            this.weaponGroupStates.put(heldShip, autofireStates);
             /* Handle autopause */
             if ((boolean)this.getState(RTS_ParseInput.stNames.pauseUnpause)
                     && !((CombatEngineAPI)this.getState(RTSAssist.stNames.engine)).isPaused())
@@ -167,9 +171,12 @@ public class RTS_ModeManager extends RTS_StatefulClasses {
             * */
             if (this.changeGroupEventString != null)
                 ((RTS_EventManager)this.getState(RTSAssist.stNames.eventManager)).deleteEvent(this.changeGroupEventString);
-            if (this.activeWeaponGroup != null) {
+            /* Only restore the configuration saved for this very ship */
+            final ShipAPI ship = (ShipAPI)this.getState(RTS_ParseInput.stNames.playerShipHold);
+            final HashMap<WeaponGroupAPI, Boolean> autofireStates = this.weaponGroupStates.get(ship);
+            final Integer activeWeaponGroup = this.activeWeaponGroups.get(ship);
+            if (autofireStates != null && activeWeaponGroup != null) {
                 this.changeGroupEventString = ((RTS_EventManager)this.getState(RTSAssist.stNames.eventManager)).addEvent(new RTS_Event() {
-                    ShipAPI ship = (ShipAPI)getState(RTS_ParseInput.stNames.playerShipHold);
 
                     @Override
                     public boolean shouldExecute(Object state) {
@@ -179,12 +186,13 @@ public class RTS_ModeManager extends RTS_StatefulClasses {
                     @Override
                     public void run() {
                         for (WeaponGroupAPI set : ship.getWeaponGroupsCopy()) {
-                            if (weaponGroups.containsKey(set)) {
-                                if (weaponGroups.get(set))
-                                    set.toggleOn();
-                                else
-                                    set.toggleOff();
-                            }
+                            Boolean autofire = autofireStates.get(set);
+                            if (autofire == null)
+                                continue;
+                            if (autofire)
+                                set.toggleOn();
+                            else
+                                set.toggleOff();
                         }
                         ship.giveCommand(ShipCommand.SELECT_GROUP, null, activeWeaponGroup);
                         changeGroupEventString = null;
