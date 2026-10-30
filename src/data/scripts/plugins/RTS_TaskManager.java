@@ -113,6 +113,9 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
         attackAtAngle,
         prioritiseEnemy,
         attackMove,
+        orbitRadial,
+        orbitTangential,
+        keepDistance,
     }
 
     public void buildListeners ()  {
@@ -208,6 +211,20 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
                     queue.clear();
                 ((HashMap<String, List<HashMap<String, Object>>>)this.getState(RTS_TaskManager.stNames.assignmentQueue)).get(x.getId()).clear();
             }
+            /* Target orders (orbit / keep distance): re-issuing the same order type onto the same
+               target flips the orbit direction; otherwise the direction is picked from the ship's
+               current drift on the first frame. Capture the previous state before deletion. */
+            Integer prevOrbitDir = null;
+            assType prevOrbitType = null;
+            String prevTargetId = null;
+            if (assignments.containsKey(x.getId()) && assignments.get(x.getId()) != null) {
+                HashMap<String, Object> prevAss = (HashMap<String, Object>)assignments.get(x.getId());
+                prevOrbitType = (assType)prevAss.get("assType");
+                prevOrbitDir = (Integer)prevAss.get("orbitDir");
+                prevTargetId = prevAss.get("targetEnemy") != null
+                        ? ((ShipAPI)prevAss.get("targetEnemy")).getId()
+                        : null;
+            }
             HashMap<String, Object> shipHold = new HashMap<>();
             shipHold.put("priorityEnemy", // If we assign this ship a new assignment, we want to see if it had a priority enemy and keep that
                     secondaryEnemy != null && shipHold.get("targetEnemy") == null
@@ -242,7 +259,11 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
             );
             shipHold.put(
                     "moveAndRelease",
-                            assignmentType == assType.attackMove
+                            assignmentType == assType.orbitRadial
+                                    || assignmentType == assType.orbitTangential
+                                    || assignmentType == assType.keepDistance
+                            ? false
+                            : assignmentType == assType.attackMove
                                     ? true
                                     : primaryEnemy != null || secondaryEnemy != null || assignmentType == assType.dynamicHoldOnFlux
                                             ? moveAndRelease
@@ -257,6 +278,35 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
                     : null
             );
             shipHold.put("angledAttack", null);
+            /* Target orders chase a point relative to their target. The radius comes from the
+               drag distance when one is given, otherwise from the ship's weapon range. */
+            shipHold.put("orbitRadius", null);
+            shipHold.put("orbitDir", null);
+            if (assignmentType == assType.orbitRadial
+                    || assignmentType == assType.orbitTangential
+                    || assignmentType == assType.keepDistance
+            ) {
+                float orbitRadius = coOrdSec != null
+                        ? MathUtils.clamp(
+                                MathUtils.getDistance(coOrd, coOrdSec),
+                                this.minOrbitRadius(x, primaryEnemy),
+                                8000f
+                        )
+                        : this.defaultOrbitRadius(x, primaryEnemy);
+                shipHold.put("orbitRadius", orbitRadius);
+                shipHold.put(
+                        "orbitDir",
+                        assignmentType == assType.keepDistance
+                                ? 1
+                                : prevOrbitType == assignmentType
+                                && prevTargetId != null
+                                && primaryEnemy != null
+                                && prevTargetId.equals(primaryEnemy.getId())
+                                && prevOrbitDir != null
+                                ? -prevOrbitDir
+                                : null
+                );
+            }
             shipHold.put("targetEnemy", primaryEnemy);
             shipHold.put("closestEnemy", null);
             assignments.put(x.getId(), shipHold);
@@ -270,6 +320,8 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
             case attackAtAngle -> "AttackAtAngle";
             case prioritiseEnemy -> null;
             case attackMove -> primaryEnemy != null ? "AttackMove" : "AttackMoveShip";
+            case orbitRadial, orbitTangential -> "AttackAtAngle";
+            case keepDistance -> "CreateStandardAssignment";
         };
         float volume = switch (assignmentType) {
             case moveAndRelease -> 0.8f;
@@ -279,6 +331,7 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
             case attackAtAngle -> 1f;
             case prioritiseEnemy -> 0.9f;
             case attackMove -> 0.7f;
+            case orbitRadial, orbitTangential, keepDistance -> 1f;
         };
 
         float pitch = switch (assignmentType) {
@@ -289,6 +342,9 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
             case attackAtAngle -> 1f;
             case prioritiseEnemy -> 1f;
             case attackMove -> 1f;
+            case orbitRadial -> 1.1f;
+            case orbitTangential -> 1.25f;
+            case keepDistance -> 0.9f;
         };
 
         if (sound != null && notify)
@@ -345,6 +401,9 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
                     prevAssPointer == assType.moveAndHold
                     || prevAssPointer == assType.dynamicHoldOnFlux
                     || prevAssPointer == assType.prioritiseEnemy
+                    || prevAssPointer == assType.orbitRadial
+                    || prevAssPointer == assType.orbitTangential
+                    || prevAssPointer == assType.keepDistance
             )
                 continue;
             if (queuePointer.isEmpty() && assignmentPointer != null) {
@@ -487,6 +546,71 @@ public class RTS_TaskManager extends RTS_StatefulClasses {
                 coOrd.getX() + ((coOrdSec.getX() - coOrd.getX()) * ratio),
                 coOrd.getY() + ((coOrdSec.getY() - coOrd.getY()) * ratio)
         ));
+    }
+
+    /* Any alive non-fighter ship under (or near) the cursor — friends and enemies alike.
+       Used by the target-info lock. Mirrors getEnemies' tolerance handling. */
+    public ShipAPI getShipUnderCursor (Vector2f coOrd) {
+        float missedClickUIHelper = 25f * (((float)this.getDeepState(Arrays.asList(RTSAssist.stNames.config, RTSAssist.coNames.selectionTolerance)) - 1f) * 2f)
+                * ((float)this.getState(RTS_CameraRework.stNames.targetZoom) * 0.3f);
+        List<ShipAPI> lockableShips = new ArrayList<>();
+        for (ShipAPI ship : ((CombatEngineAPI)this.getState(RTSAssist.stNames.engine)).getShips()) {
+            if (ship.isFighter() || ship.isHulk())
+                continue;
+            lockableShips.add(ship);
+        }
+        ShipAPI hovered = null;
+        for (ShipAPI ship : lockableShips) {
+            ship.getExactBounds().update(ship.getLocation(), ship.getFacing());
+            if (CollisionUtils.isPointWithinBounds(coOrd, (CombatEntityAPI)ship)) {
+                hovered = ship;
+                break;
+            }
+        }
+        if (hovered == null) {
+            float shortestD = 400000000;
+            float dPointer;
+            for (ShipAPI ship : lockableShips) {
+                dPointer = ((Double)RTS_AssortedFunctions.getDistanceSquared(
+                        coOrd,
+                        CollisionUtils.getNearestPointOnBounds(coOrd, ship))
+                ).floatValue();
+                if (dPointer < Math.pow(missedClickUIHelper, 2)) {
+                    if (dPointer < shortestD) {
+                        shortestD = dPointer;
+                        hovered = ship;
+                    }
+                }
+            }
+        }
+        return (hovered);
+    }
+
+    /* Target orders (orbit / keep distance): just inside the ship's longest direct-fire weapon
+       range, so circling ships keep their guns on the target. */
+    private float defaultOrbitRadius (ShipAPI ship, ShipAPI target) {
+        float maxRange = 0f;
+        for (WeaponAPI weapon : ship.getUsableWeapons()) {
+            if (weapon.getType() == WeaponAPI.WeaponType.MISSILE)
+                continue;
+            String role = weapon.getOriginalSpec().getPrimaryRoleStr();
+            if (role == null
+                    || role.equals("Point Defense")
+                    || role.equals("Anti Fighter")
+                    || role.equals("Point Defense (Area)")
+            )
+                continue;
+            if (weapon.getRange() > maxRange)
+                maxRange = weapon.getRange();
+        }
+        if (maxRange <= 0f)
+            maxRange = 600f;
+        return (MathUtils.clamp(maxRange * 0.85f, this.minOrbitRadius(ship, target), 8000f));
+    }
+
+    private float minOrbitRadius (ShipAPI ship, ShipAPI target) {
+        float targetRadius = target != null ? target.getCollisionRadius() : 0f;
+        return (ship.getShieldRadiusEvenIfNoShield() + targetRadius + 60f);
     }
 
     private HashMap<String, Object> getWeaponPosMods (ShipAPI ship) {

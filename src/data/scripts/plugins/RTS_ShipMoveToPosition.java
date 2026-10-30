@@ -153,7 +153,9 @@ public class RTS_ShipMoveToPosition extends RTS_StatefulClasses {
             if (update) this.update(
                     assignment,
                     (ShipAPI)this.getState(this.stNames.ship),
-                    assignment.get("targetEnemy") != null
+                    this.isTargetOrder(assignment)
+                            ? this.findTargetOrderCoOrd(assignment, (ShipAPI)this.getState(this.stNames.ship))
+                            : assignment.get("targetEnemy") != null
                             ? assignment.get("attackAngle") != null
                             ? findAngledAttackCoOrd(
                                     (ShipAPI)assignment.get("targetEnemy"),
@@ -277,18 +279,35 @@ public class RTS_ShipMoveToPosition extends RTS_StatefulClasses {
             target = ((ShipAPI)this.getState(this.stNames.closestEnemy)).getLocation();
         else
             target = coOrd;
+        /* Target orders override the usual facing rules: radial orbit and keep distance point
+           the nose straight at the target, tangential orbit points it along the direction of
+           travel so the broadside faces the target. */
+        RTS_TaskManager.assType assTypeHold = (RTS_TaskManager.assType)assignment.get("assType");
+        float facingTarget;
+        float angleToTarget = VectorUtils.getAngle(ship.getLocation(), target);
+        if (assTypeHold == RTS_TaskManager.assType.orbitRadial
+                || assTypeHold == RTS_TaskManager.assType.keepDistance
+        ) {
+            facingTarget = angleToTarget;
+        }
+        else if (assTypeHold == RTS_TaskManager.assType.orbitTangential) {
+            Integer dirHold = (Integer)assignment.get("orbitDir");
+            int dir = dirHold == null ? 1 : dirHold;
+            /* The tangent of a CCW orbit (dir = 1) sits at (angle to target) - 90. */
+            facingTarget = MathUtils.clampAngle(angleToTarget - 90f * dir);
+        }
+        else {
+            facingTarget = this.getBroadSideModifier(
+                    ship,
+                    angleToTarget,
+                    targetEnemy != null
+                            || priorityEnemy != null
+                            || this.getState(this.stNames.closestEnemy) != null
+            );
+        }
         this.getRotation(
                 ship.getFacing(),
-                this.getBroadSideModifier(
-                        ship,
-                        VectorUtils.getAngle(
-                                ship.getLocation(),
-                                target
-                        ),
-                        targetEnemy != null
-                                || priorityEnemy != null
-                                || this.getState(this.stNames.closestEnemy) != null
-                ),
+                facingTarget,
                 ship.getAngularVelocity(),
                 assignment
         );
@@ -297,6 +316,57 @@ public class RTS_ShipMoveToPosition extends RTS_StatefulClasses {
                 (Vector2f)this.getDeepState(Arrays.asList(this.stNames.vData, this.vDNames.relativeVelocity)),
                 (Vector2f)this.getDeepState(Arrays.asList(this.stNames.vData, this.vDNames.relativeTargetVector))
         );
+    }
+
+    /* Radial orbit / tangential orbit / keep distance: these orders continuously chase a point
+       relative to their (moving) target instead of a fixed destination. */
+    private boolean isTargetOrder (HashMap<String, Object> assignment) {
+        RTS_TaskManager.assType type = (RTS_TaskManager.assType)assignment.get("assType");
+        return (type == RTS_TaskManager.assType.orbitRadial
+                || type == RTS_TaskManager.assType.orbitTangential
+                || type == RTS_TaskManager.assType.keepDistance);
+    }
+
+    private Vector2f findTargetOrderCoOrd (HashMap<String, Object> assignment, ShipAPI ship) {
+        ShipAPI target = (ShipAPI)assignment.get("targetEnemy");
+        if (target == null)
+            return ((Vector2f)assignment.get("dest"));
+        Float radiusHold = (Float)assignment.get("orbitRadius");
+        float radius = radiusHold == null ? 600f : radiusHold;
+        radius = Math.max(
+                radius,
+                ship.getShieldRadiusEvenIfNoShield() + target.getCollisionRadius() + 60f
+        );
+        /* Radial unit pointing from the target towards this ship. */
+        Vector2f radial = VectorUtils.getDirectionalVector(target.getLocation(), ship.getLocation());
+        /* Keep distance: hold the current bearing, purely radial positioning (kiting / formation). */
+        if ((RTS_TaskManager.assType)assignment.get("assType") == RTS_TaskManager.assType.keepDistance) {
+            return (new Vector2f(
+                    target.getLocation().getX() + radial.getX() * radius,
+                    target.getLocation().getY() + radial.getY() * radius
+            ));
+        }
+        /* Orbits: chase a point on the circle a lead distance along the travel direction, so the
+           existing steering keeps the ship circling while it corrects back onto the radius. */
+        Integer dirHold = (Integer)assignment.get("orbitDir");
+        int dir;
+        if (dirHold != null) {
+            dir = dirHold;
+        }
+        else {
+            /* Pick up in whatever direction the ship is already drifting; CCW (dir = 1) if still. */
+            float dx = ship.getLocation().getX() - target.getLocation().getX();
+            float dy = ship.getLocation().getY() - target.getLocation().getY();
+            float drift = ship.getVelocity().getX() * -dy + ship.getVelocity().getY() * dx;
+            dir = drift >= 0f ? 1 : -1;
+            assignment.put("orbitDir", dir);
+        }
+        float lead = MathUtils.clamp(ship.getMaxSpeed() * 0.45f, 40f, 400f);
+        Vector2f tangent = new Vector2f(-radial.getY() * dir, radial.getX() * dir);
+        return (new Vector2f(
+                target.getLocation().getX() + radial.getX() * radius + tangent.getX() * lead,
+                target.getLocation().getY() + radial.getY() * radius + tangent.getY() * lead
+        ));
     }
 
     private Vector2f findClosestEnemyAttackPosition(ShipAPI ship, Vector2f coOrdRaw, HashMap<String, Object> assignment) {

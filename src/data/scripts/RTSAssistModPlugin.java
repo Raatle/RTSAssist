@@ -139,6 +139,12 @@ public class RTSAssistModPlugin extends BaseModPlugin {
                 put("toggleMiniMap", null);
             else
                 put("toggleMiniMap", ((Character)toggleMiniMap.charAt(0)).toString());
+            /* Target orders (0.2.20exp); fall back to Z/T/O for hotkey files predating them. */
+            put("orbitRadial", readHotKey(hotKeyFile, "orbitRadial", "Z"));
+            put("orbitTangential", readHotKey(hotKeyFile, "orbitTangential", "T"));
+            put("keepDistance", readHotKey(hotKeyFile, "keepDistance", "O"));
+            /* Target-info lock (0.2.21exp); falls back to L for older hotkey files. */
+            put("lockTarget", readHotKey(hotKeyFile, "lockTarget", "L"));
         }};
         if (true) {
             this.hotKeys.put("param1", "H");
@@ -154,6 +160,16 @@ public class RTSAssistModPlugin extends BaseModPlugin {
         RTSAssistModPlugin.RTS_Global.put("config", this.config);
         RTSAssistModPlugin.RTS_Global.put("isEnabled", (boolean)configFile.getBoolean("isEnabled"));
         new RTS_LunaIntegration().init();
+    }
+
+    /* Reads a single hotkey entry; missing keys fall back to the given default, empty disables. */
+    private String readHotKey (JSONObject file, String key, String fallback) {
+        try {
+            String value = file.getString(key);
+            return (value.isEmpty() ? null : ((Character)value.charAt(0)).toString());
+        } catch (JSONException ignored) {
+            return (fallback);
+        }
     }
 
     @Override

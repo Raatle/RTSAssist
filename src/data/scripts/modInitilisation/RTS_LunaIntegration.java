@@ -125,6 +125,42 @@ public class RTS_LunaIntegration {
                 Keyboard.getKeyIndex(this.hotPointer.get("attackMove")),
                 this.hotKeyTabName
         );
+        /* Radial Orbit */
+        LunaSettings.SettingsCreator.addKeybind(
+                this.modID,
+                "RTSA_SettingsKeybind_orbitRadial",
+                "Radial Orbit",
+                "Selected ships orbit the enemy ship under the cursor with their nose pointed at the target. Issuing the same order on the same target again reverses the orbit direction.",
+                Keyboard.getKeyIndex(this.hotPointer.get("orbitRadial")),
+                this.hotKeyTabName
+        );
+        /* Tangential Orbit */
+        LunaSettings.SettingsCreator.addKeybind(
+                this.modID,
+                "RTSA_SettingsKeybind_orbitTangential",
+                "Tangential Orbit",
+                "Selected ships orbit the enemy ship under the cursor with their broadside facing the target. Issuing the same order on the same target again reverses the orbit direction.",
+                Keyboard.getKeyIndex(this.hotPointer.get("orbitTangential")),
+                this.hotKeyTabName
+        );
+        /* Keep Distance */
+        LunaSettings.SettingsCreator.addKeybind(
+                this.modID,
+                "RTSA_SettingsKeybind_keepDistance",
+                "Keep Distance",
+                "Selected ships keep a fixed distance from the enemy ship under the cursor (85% of their longest direct-fire weapon range by default).",
+                Keyboard.getKeyIndex(this.hotPointer.get("keepDistance")),
+                this.hotKeyTabName
+        );
+        /* Lock Target (view ship info) */
+        LunaSettings.SettingsCreator.addKeybind(
+                this.modID,
+                "RTSA_SettingsKeybind_lockTarget",
+                "Lock Target (view ship info)",
+                "Lock the ship under the cursor (allies and enemies alike) and fan out its info card, vanilla-R style. Press the key again on the locked ship or over empty space, or make any selection, to release the lock.",
+                Keyboard.getKeyIndex(this.hotPointer.get("lockTarget")),
+                this.hotKeyTabName
+        );
         /* Strafe Left */
         LunaSettings.SettingsCreator.addKeybind(
                 this.modID,
