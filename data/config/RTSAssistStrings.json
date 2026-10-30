@@ -1,0 +1,348 @@
+{
+    "_tabs": {
+        "en": {
+            "_tab_hotkeys": "HotKeys",
+            "_tab_settings": "Settings",
+            "_tab_render": "Render Settings",
+            "_tab_devtools": "Dev Tools"
+        },
+        "zh": {
+            "_tab_hotkeys": "热键",
+            "_tab_settings": "设置",
+            "_tab_render": "渲染设置",
+            "_tab_devtools": "开发者工具"
+        }
+    },
+    "en": {
+        "RTSA_SettingsKeybind_enable_RTSMode": {
+            "label": "Toggle RTS mode",
+            "tooltip": "Switch between vanilla and RTS control schemes."
+        },
+        "RTSA_SettingsKeybind_saveLayout": {
+            "label": "Save Formations",
+            "tooltip": "Save all assignments, control groups and vanilla escort assignments to memory."
+        },
+        "RTSA_SettingsKeybind_loadLayout": {
+            "label": "Load Formations",
+            "tooltip": "Load all assignments, control groups and vanilla escort assignments from memory, positioned at the cursor location."
+        },
+        "RTSA_SettingsKeybind_deleteAssignments": {
+            "label": "Remove Assignment",
+            "tooltip": "Selected ships return to vanilla AI control."
+        },
+        "RTSA_SettingsKeybind_vent": {
+            "label": "Vent Ships",
+            "tooltip": "Selected ships will attempt to vent flux."
+        },
+        "RTSA_SettingsKeybind_useSystem": {
+            "label": "Use Systems",
+            "tooltip": "Selected ships will attempt to use their systems"
+        },
+        "RTSA_SettingsKeybind_moveTogether": {
+            "label": "Move Together",
+            "tooltip": "Selected ships with assigments will maintain formation."
+        },
+        "RTSA_SettingsKeybind_attackMove": {
+            "label": "Attack Move",
+            "tooltip": "Selected ships attack move to the designated position. Will convert any move assignments before creating a new assignment."
+        },
+        "RTSA_SettingsKeybind_orbitRadial": {
+            "label": "Radial Orbit",
+            "tooltip": "Selected ships orbit the enemy ship under the cursor with their nose pointed at the target. Issuing the same order on the same target again reverses the orbit direction."
+        },
+        "RTSA_SettingsKeybind_orbitTangential": {
+            "label": "Tangential Orbit",
+            "tooltip": "Selected ships orbit the enemy ship under the cursor with their broadside facing the target. Issuing the same order on the same target again reverses the orbit direction."
+        },
+        "RTSA_SettingsKeybind_keepDistance": {
+            "label": "Keep Distance",
+            "tooltip": "Selected ships keep a fixed distance from the enemy ship under the cursor (85% of their longest direct-fire weapon range by default)."
+        },
+        "RTSA_SettingsKeybind_lockTarget": {
+            "label": "Lock Target (view ship info)",
+            "tooltip": "Lock the ship under the cursor (allies and enemies alike) and fan out its info card, vanilla-R style. Press the key again on the locked ship or over empty space, or make any selection, to release the lock."
+        },
+        "RTSA_SettingsKeybind_strafeLeft": {
+            "label": "Strafe Camera Left",
+            "tooltip": "Strafe the Camera left using the keyboard"
+        },
+        "RTSA_SettingsKeybind_strafeRight": {
+            "label": "Strafe Camera Right",
+            "tooltip": "Strafe the Camera right using the keyboard"
+        },
+        "RTSA_SettingsKeybind_strafeUp": {
+            "label": "Strafe Camera Up",
+            "tooltip": "Strafe the Camera up using the keyboard"
+        },
+        "RTSA_SettingsKeybind_strafeDown": {
+            "label": "Strafe Camera Down",
+            "tooltip": "Strafe the Camera down using the keyboard"
+        },
+        "RTSA_SettingsKeybind_broadsideSelection": {
+            "label": "Adjust broadside modifier",
+            "tooltip": "Adjust broadside modifiers for a selected ship. Persistant between battles and saves"
+        },
+        "RTSA_SettingsKeybind_toggleMiniMap": {
+            "label": "Toggle Minimap",
+            "tooltip": "Show or hide the RTSAssist minimap during combat."
+        },
+        "RTSA_SettingsConfig_defaultModeIsRTS": {
+            "label": "Default Mode",
+            "tooltip": "True / False : RTS mode is enabled/disabled at the beginning of combat. This does not disable the mod, but selects the default mode at the beginning of combat."
+        },
+        "RTSA_SettingsConfig_pauseUnpause": {
+            "label": "Pause on RTSMode",
+            "tooltip": "Pause when changing to RTS mode, unpause on changing to vanilla."
+        },
+        "RTSA_SettingsConfig_switchRightClick": {
+            "label": "Switch Right Mouse Button",
+            "tooltip": "Switch single and double right click functionality. Temporarily disabled."
+        },
+        "RTSA_SettingsConfig_scrollSpeed": {
+            "label": "Mouse Scroll Speed",
+            "tooltip": "Change the speed at which the screen pans, when using the Mouse."
+        },
+        "RTSA_SettingsConfig_scrollSmoothing": {
+            "label": "Mouse Scroll Smoothing",
+            "tooltip": "Change the acceleration at which the screen pans, when using the Mouse."
+        },
+        "RTSA_SettingsConfig_scrollSpeedKeyboard": {
+            "label": "Keyboard Scroll Speed",
+            "tooltip": "Change the speed at which the screen pans, when using the Keyboard."
+        },
+        "RTSA_SettingsConfig_scrollSmoothingKeyboard": {
+            "label": "Keyboard Scroll Smoothing",
+            "tooltip": "Change the acceleration at which the screen pans, when using the Keyboard."
+        },
+        "RTSA_SettingsConfig_zoomSensi": {
+            "label": "Zoom Sensitivity",
+            "tooltip": "How sensitive the scroll wheel is."
+        },
+        "RTSA_SettingsConfig_minZoom": {
+            "label": "Minimum Zoom",
+            "tooltip": "How far the player can zoom in."
+        },
+        "RTSA_SettingsConfig_maxZoom": {
+            "label": "Maximum Zoom",
+            "tooltip": "How far the player can zoom out."
+        },
+        "RTSA_SettingsConfig_screenScaling": {
+            "label": "Render Scaling",
+            "tooltip": "Manually adjust Render scaling. If using in game Render scaling this should not be necessary. If you are using nvidia upscaling for example, you will likely need to adjust this setting. Match the value with your scaling setting."
+        },
+        "RTSA_SettingsConfig_selectionTolerance": {
+            "label": "Selection Tolerance",
+            "tooltip": "Adjusts the error tolerance for selecting ships. If you are constantly missing clicks on ships, raising this value will help. Settings to 1 removes this feature."
+        },
+        "RTSA_SettingsConfig_rememberZoom": {
+            "label": "Remember Zoom when switching between Modes",
+            "tooltip": "The zoom for either RTSmode or Vanilla is stored and reset upon switching to that mode."
+        },
+        "RTSA_SettingsConfig_alternativeRotation": {
+            "label": "Alternative Rotation",
+            "tooltip": "An alternative method for rotating formations that requires less mouse movement."
+        },
+        "RTSA_SettingsUI_CommandVolume": {
+            "label": "Render Command Volume",
+            "tooltip": "Adjust the volume assosciated with the audio feedback for issuing commands."
+        },
+        "RTSA_SettingsUI_miniMapRefreshMs": {
+            "label": "Minimap Refresh Interval",
+            "tooltip": "Refresh period of the minimap's frame data (ms); also the duration of one full sweep cycle. Lower values mean fresher map data."
+        },
+        "RTSA_SettingsUI_miniMapSweepMs": {
+            "label": "Sweep Duration",
+            "tooltip": "How long (ms) each sweep phase (ships / fighters) takes to finish scanning all units. Each cycle goes: sweep ships, hold, sweep fighters, hold."
+        },
+        "RTSA_SettingsUI_showMiniMap": {
+            "label": "Show Minimap",
+            "tooltip": "True / False : whether to show the RTSAssist minimap. Initialized from this setting when combat starts; can also be toggled at any time with the hotkey."
+        },
+        "RTSA_SettingsUI_showFogOfWar": {
+            "label": "Show Fog Of War",
+            "tooltip": "True / False : whether to render the black fog of war covering areas of the battlefield your ships cannot see."
+        },
+        "RTSA_SettingsDevTools_enableShipTestSuite": {
+            "label": "Enable RTSAssist ship testing tools",
+            "tooltip": "See the modding README for details. Requires Starsector Devmode to be true."
+        },
+        "RTSA_SettingsDevTools_modID": {
+            "label": "modID",
+            "tooltip": "See the modding README for details. Entering strings in Luna is currently very buggy. It may be better to set this in the RTSAssist config."
+        },
+        "RTSA_SettingsDevTools_findAllShips": {
+            "label": "Search for ALL ships",
+            "tooltip": "See the modding README for details."
+        },
+        "RTSA_SettingsConfig_uiLanguage": {
+            "label": "UI Language / 界面语言",
+            "tooltip": "auto / en / zh - language for every label and tooltip on these pages. \"auto\" follows the operating system language (Chinese system -> Chinese). Takes effect after restarting the game. ｜ 界面语言：auto 为跟随操作系统语言（中文系统 -> 中文），改动后重启游戏生效。"
+        }
+    },
+    "zh": {
+        "RTSA_SettingsKeybind_enable_RTSMode": {
+            "label": "切换 RTS 模式",
+            "tooltip": "在原版操作方式与 RTS 控制模式之间切换。"
+        },
+        "RTSA_SettingsKeybind_saveLayout": {
+            "label": "保存阵型",
+            "tooltip": "将所有命令、控制组以及原版护航指派保存至内存。"
+        },
+        "RTSA_SettingsKeybind_loadLayout": {
+            "label": "加载阵型",
+            "tooltip": "从内存中读取所有命令、控制组及原版护航指派，并在光标所在位置部署。"
+        },
+        "RTSA_SettingsKeybind_deleteAssignments": {
+            "label": "移除命令",
+            "tooltip": "所选舰船将重新交由原版 AI 接管。"
+        },
+        "RTSA_SettingsKeybind_vent": {
+            "label": "舰船排幅",
+            "tooltip": "所选舰船将尝试进行主动排幅。"
+        },
+        "RTSA_SettingsKeybind_useSystem": {
+            "label": "启动战术系统",
+            "tooltip": "所选舰船将尝试使用其战术系统。"
+        },
+        "RTSA_SettingsKeybind_moveTogether": {
+            "label": "协同移动",
+            "tooltip": "带有命令的所选舰船将保持阵型协同移动。"
+        },
+        "RTSA_SettingsKeybind_attackMove": {
+            "label": "攻击移动",
+            "tooltip": "所选舰船向指定位置执行攻击移动。若已有移动命令，将在创建新命令前将其转换为攻击移动。"
+        },
+        "RTSA_SettingsKeybind_orbitRadial": {
+            "label": "径向环绕",
+            "tooltip": "所选舰船环绕光标处敌舰，舰首始终朝向目标。再次对同一目标下达同一命令可反转环绕方向。"
+        },
+        "RTSA_SettingsKeybind_orbitTangential": {
+            "label": "切向环绕",
+            "tooltip": "所选舰船环绕光标处敌舰，以舷侧朝向目标，适合征服者等侧舷舰。再次对同一目标下达同一命令可反转环绕方向。"
+        },
+        "RTSA_SettingsKeybind_keepDistance": {
+            "label": "保持距离",
+            "tooltip": "所选舰船与光标处敌舰保持固定距离（默认为最长武器射程的 85%），适合风筝与保持阵型。"
+        },
+        "RTSA_SettingsKeybind_lockTarget": {
+            "label": "锁定查看舰船信息",
+            "tooltip": "锁定光标处舰船（敌我皆可）并展开其信息卡，再次按键或按向空处解除；任何选择操作也会解除锁定。"
+        },
+        "RTSA_SettingsKeybind_strafeLeft": {
+            "label": "镜头向左平移",
+            "tooltip": "使用键盘向左平移镜头。"
+        },
+        "RTSA_SettingsKeybind_strafeRight": {
+            "label": "镜头向右平移",
+            "tooltip": "使用键盘向右平移镜头。"
+        },
+        "RTSA_SettingsKeybind_strafeUp": {
+            "label": "镜头向上平移",
+            "tooltip": "使用键盘向上平移镜头。"
+        },
+        "RTSA_SettingsKeybind_strafeDown": {
+            "label": "镜头向下平移",
+            "tooltip": "使用键盘向下平移镜头。"
+        },
+        "RTSA_SettingsKeybind_broadsideSelection": {
+            "label": "调整舷侧射击修正",
+            "tooltip": "调整所选舰船的舷侧射击修正。该设置在战斗与存档之间永久保留。"
+        },
+        "RTSA_SettingsKeybind_toggleMiniMap": {
+            "label": "显示/隐藏小地图",
+            "tooltip": "在战斗中显示或隐藏 RTSAssist 小地图。"
+        },
+        "RTSA_SettingsConfig_defaultModeIsRTS": {
+            "label": "默认模式",
+            "tooltip": "开启/关闭：战斗开始时是否默认启用 RTS 模式。此选项不会禁用模组，仅决定入战时的初始模式。"
+        },
+        "RTSA_SettingsConfig_pauseUnpause": {
+            "label": "切换至 RTS 模式时暂停",
+            "tooltip": "切换至 RTS 模式时自动暂停游戏，切回原版模式时解除暂停。"
+        },
+        "RTSA_SettingsConfig_switchRightClick": {
+            "label": "翻转鼠标右键功能",
+            "tooltip": "互换鼠标右键单击与双击的功能。当前暂时停用。"
+        },
+        "RTSA_SettingsConfig_scrollSpeed": {
+            "label": "鼠标滚屏速度",
+            "tooltip": "调整使用鼠标移动视野时镜头的平移速度。"
+        },
+        "RTSA_SettingsConfig_scrollSmoothing": {
+            "label": "鼠标滚屏平滑度",
+            "tooltip": "调整使用鼠标移动视野时镜头平移的平滑度与加速度。"
+        },
+        "RTSA_SettingsConfig_scrollSpeedKeyboard": {
+            "label": "键盘滚屏速度",
+            "tooltip": "调整使用键盘平移镜头时的移动速度。"
+        },
+        "RTSA_SettingsConfig_scrollSmoothingKeyboard": {
+            "label": "键盘滚屏平滑度",
+            "tooltip": "调整使用键盘平移镜头时的平滑度与加速度。"
+        },
+        "RTSA_SettingsConfig_zoomSensi": {
+            "label": "缩放灵敏度",
+            "tooltip": "滚轮缩放的灵敏度。"
+        },
+        "RTSA_SettingsConfig_minZoom": {
+            "label": "最小缩放级别",
+            "tooltip": "视角可向内拉近的最大视野距离。"
+        },
+        "RTSA_SettingsConfig_maxZoom": {
+            "label": "最大缩放级别",
+            "tooltip": "视角可向外拉远的最大视野距离。"
+        },
+        "RTSA_SettingsConfig_screenScaling": {
+            "label": "渲染缩放",
+            "tooltip": "手动调整渲染缩放比例。若已在游戏本体内启用了画面缩放，则通常无需调整此项。若使用了 NVIDIA 超分辨率等缩放功能，可能需要调整此项以匹配对应的缩放比例数值。"
+        },
+        "RTSA_SettingsConfig_selectionTolerance": {
+            "label": "选框容差",
+            "tooltip": "调整点击选中舰船时的判定容差范围。若经常点空，提高此数值会有所改善；设为 1 则关闭该容差特性。"
+        },
+        "RTSA_SettingsConfig_rememberZoom": {
+            "label": "切换模式时保留缩放级别",
+            "tooltip": "分别记录 RTS 模式与原版模式下的缩放级别，并在切换模式时自动复原。"
+        },
+        "RTSA_SettingsConfig_alternativeRotation": {
+            "label": "备选旋转控制",
+            "tooltip": "一种对鼠标移动幅度要求更小的阵型旋转操控方式。"
+        },
+        "RTSA_SettingsUI_CommandVolume": {
+            "label": "指令音量",
+            "tooltip": "调整下达指令时界面音频反馈的音量大小。"
+        },
+        "RTSA_SettingsUI_miniMapRefreshMs": {
+            "label": "小地图刷新间隔",
+            "tooltip": "调整小地图画面数据的刷新周期（毫秒），也是一个完整扫描循环的时长。数值越低地图数据越新鲜。"
+        },
+        "RTSA_SettingsUI_miniMapSweepMs": {
+            "label": "扫描时长",
+            "tooltip": "调整小地图每个扫描相位（舰船/战机）扫完全部单位所用的时间（毫秒）。每个周期内：扫描舰船，保持，扫描战机，保持。"
+        },
+        "RTSA_SettingsUI_showMiniMap": {
+            "label": "显示小地图",
+            "tooltip": "开启/关闭：是否显示 RTSAssist 小地图。入战时按此设置初始化，战斗中也可随时用热键切换。"
+        },
+        "RTSA_SettingsUI_showFogOfWar": {
+            "label": "显示战争迷雾",
+            "tooltip": "开启/关闭：是否渲染战场上的黑色战争迷雾（己方舰船视野之外的黑色遮罩）。"
+        },
+        "RTSA_SettingsDevTools_enableShipTestSuite": {
+            "label": "启用 RTSAssist 舰船测试工具",
+            "tooltip": "详情请参阅模组开发说明文档（modding README）。需要将《远行星号》的开发者模式（Devmode）设为 true。"
+        },
+        "RTSA_SettingsDevTools_modID": {
+            "label": "modID",
+            "tooltip": "详情请参阅模组开发说明文档。目前在 Luna 菜单中输入文本可能存在异常，建议直接在 RTSAssist 配置文件中修改此项。"
+        },
+        "RTSA_SettingsDevTools_findAllShips": {
+            "label": "搜索所有舰船",
+            "tooltip": "详情请参阅模组开发说明文档。"
+        },
+        "RTSA_SettingsConfig_uiLanguage": {
+            "label": "UI Language / 界面语言",
+            "tooltip": "auto / en / zh - language for every label and tooltip on these pages. \"auto\" follows the operating system language (Chinese system -> Chinese). Takes effect after restarting the game. ｜ 界面语言：auto 为跟随操作系统语言（中文系统 -> 中文），改动后重启游戏生效。"
+        }
+    }
+}
