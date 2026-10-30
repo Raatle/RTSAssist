@@ -20,6 +20,7 @@
 
 package data.scripts.plugins.AISystems;
 
+import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.combat.*;
 import com.fs.starfarer.combat.ai.BasicShipAI;
 import com.fs.starfarer.combat.entities.Ship;
@@ -76,6 +77,14 @@ public class RTS_AIInjector extends RTS_StatefulClasses {
         }
         if (ship.getShipAI() == null)
             return (false);
+        /* The core may hand our own wrapper back to us (possibly inside one of its ShipAIWrappers).
+           Reinstalling it directly is enough; pushing it onto the list would only have to be
+           trimmed back off again by retrieveAI. */
+        if (this.isOurWrapper(ship, ship.getShipAI())) {
+            ship.setShipAI(this.wrapperStore.get(ship));
+            this.hookedShips.put(ship, 6);
+            return (false);
+        }
         if (!this.AIStore.containsKey(ship.getId()))
             this.AIStore.put(ship.getId(), new ArrayList<>());
         this.AIStore.get(ship.getId()).add(this.AIStore.get(ship.getId()).size(), ship.getShipAI());
@@ -98,10 +107,49 @@ public class RTS_AIInjector extends RTS_StatefulClasses {
                 public void advance(float amount) {
                     executeInjections(ship, eventType.PREADVANCE);
                     this.AIPointer = retrieveAI(ship);
-                    ship.setShipAI(this.AIPointer);
-                    if (ship.getCustomData().get(RTSAssist.shipCNames.blockAi) == null)
-                        this.AIPointer.advance(amount);
-                    ship.setShipAI(this);
+                    /* Compatibility (e.g. AI Tweaks' ExtendedShipAI): the core or another mod can
+                       reassign the ship's AI (a fresh instance) at any time, including mid-frame
+                       while our injections run. Advancing a stale copy trips vanilla
+                       BasicShipAI's "is being controlled by an AI that is assigned to something
+                       else" guard, so prefer whatever AI is currently assigned to this ship. */
+                    ShipAIPlugin liveAI = ship.getShipAI();
+                    if (liveAI != null && !isOurWrapper(ship, liveAI) && liveAI != this.AIPointer) {
+                        this.AIPointer = liveAI;
+                        List<ShipAIPlugin> AIList = AIStore.get(ship.getId());
+                        if (AIList != null) {
+                            if (!AIList.isEmpty())
+                                AIList.set(AIList.size() - 1, liveAI);
+                            else
+                                AIList.add(liveAI);
+                        }
+                    }
+                    if (this.AIPointer != null) {
+                        ship.setShipAI(this.AIPointer);
+                        if (ship.getCustomData().get(RTSAssist.shipCNames.blockAi) == null) {
+                            try {
+                                this.AIPointer.advance(amount);
+                            } catch (RuntimeException e) {
+                                /* Last-resort self-heal: if we still raced another mod's AI
+                                   reassignment, drop the stale entry, restore our wrapper and
+                                   let the next frame re-sync instead of killing the advance
+                                   loop. Anything else is a genuine bug and rethrown. */
+                                if (String.valueOf(e.getMessage())
+                                        .contains("is being controlled by an AI that is assigned to something else")) {
+                                    List<ShipAIPlugin> AIList = AIStore.get(ship.getId());
+                                    if (AIList != null && !AIList.isEmpty())
+                                        AIList.remove(AIList.size() - 1);
+                                    Global.getLogger(RTS_AIInjector.class).warn(
+                                            "RTS_AIInjector: ship " + ship.getName()
+                                                    + " had an AI that was reassigned elsewhere; dropping it and re-hooking."
+                                    );
+                                }
+                                else {
+                                    throw (e);
+                                }
+                            }
+                        }
+                        ship.setShipAI(this);
+                    }
                     executeInjections(ship, eventType.POSTADVANCE);
                 }
 
@@ -146,26 +194,35 @@ public class RTS_AIInjector extends RTS_StatefulClasses {
     private ShipAIPlugin retrieveAI(ShipAPI ship) {
         this.hookedShips.put(ship, 0);
         List<ShipAIPlugin> AIList = this.AIStore.get(ship.getId());
-        if (this.recFlag) {
-            if (!AIList.isEmpty())
-                AIList.remove(AIList.size() - 1);
-            if (!AIList.isEmpty())
-                return (AIList.get(AIList.size() - 1));
-            else {
-                ship.setShipAI(new BasicShipAI((Ship)ship));
-                return (ship.getShipAI());
-            }
-        }
-        recFlag = true;
-        // we are checking to see if the ai we retrieved is our wrapper, if its not this will do nothing, else the ai list will be trimmed.
-        AIList.get(AIList.size() - 1).getConfig();
-        this.recFlag = false;
+        if (AIList == null)
+            return (null);
+        /* Trim any of our own wrappers (or core ShipAIWrappers around them) off the top of the
+           list. This replaces the old getConfig() probe trick, which could leave duplicates
+           behind and hand our wrapper itself back as the "AI" to advance. */
+        while (!AIList.isEmpty() && this.isOurWrapper(ship, AIList.get(AIList.size() - 1)))
+            AIList.remove(AIList.size() - 1);
         if (!AIList.isEmpty())
             return (AIList.get(AIList.size() - 1));
-        else
-            return (ship.getShipAI());
+        /* List exhausted: fall back to whatever AI the ship currently has, as long as it is not
+           our own wrapper (that would recurse). Only then mint a fresh vanilla AI. */
+        ShipAIPlugin liveAI = ship.getShipAI();
+        if (liveAI != null && !this.isOurWrapper(ship, liveAI))
+            return (liveAI);
+        ship.setShipAI(new BasicShipAI((Ship)ship));
+        return (ship.getShipAI());
     }
-    Boolean recFlag = false;
+
+    /* Unwraps the core's ShipAIWrapper layers and returns the underlying plugin. */
+    private ShipAIPlugin unwrapAI(ShipAIPlugin ai) {
+        while (ai instanceof Ship.ShipAIWrapper)
+            ai = ((Ship.ShipAIWrapper)ai).getAI();
+        return (ai);
+    }
+
+    /* True if the given plugin (possibly wrapped by the core) is our own wrapper for this ship. */
+    private boolean isOurWrapper(ShipAPI ship, ShipAIPlugin ai) {
+        return (ai != null && this.unwrapAI(ai) == this.wrapperStore.get(ship));
+    }
 
     private void deleteInjections() {
         for (HashMap.Entry<eventType, HashMap<String, String>> eventIdMap : this.injectionsQueuedForDeletion.entrySet()) {
@@ -193,25 +250,27 @@ public class RTS_AIInjector extends RTS_StatefulClasses {
     /*
      * RESOLVED PROBLEM >retrieveAI<: If the core takes the ships AI offline and replaces it with its own wrapper, RTSAssist will think its
      * a new AI and queue that onto the AIList. When the AI is called, out wrapper will try to retrieve its AI. The AI
-     * will be the cores wrapper which will then point at our wrapper which will then point back at it. Line 118
-     * checked to see if the AI we just pulled is our wrapper but cant see if it is another wrapper which points to
-     * our wrapper.
+     * will be the cores wrapper which will then point at our wrapper which will then point back at it.
      *
-     * SOLUTION: when asked to retrieve an AI, we grab out last list instance, set a flag to true and call getConfig on the
-     * AI instance. If the flag remains true, we return that AI as we know it is an intended AI, as if the AI is wrapped by us, it
-     * will set the flag to false, in which case we roll back our AI list and pass that instead. If the rolled back AI is also our
-     * wrapper, the process should repeat but the AIList will be trimmed on each iteration. This should continue until we
-     * have trimmed our AI list of our own wrappers.
+     * SOLUTION: The AIList is trimmed of any of our own wrappers (directly, or wrapped in the core's
+     * ShipAIWrapper) by identity (unwrapAI/isOurWrapper) before the last entry is returned. The old
+     * getConfig() probe trick could leave duplicate wrappers behind and hand our wrapper itself back
+     * as the AI to advance.
      *
      * PROBLEM 2: Under some circumstance??, the core seems to be replacing the initial pointer to the base AI with a
      * wrapper that now points to our wrapper. This means we have completely lost touch with base AI and a recursive fault
      * occurs as we have no AI to roll back to.
      *
-     * SOLUTION 2: If retrieveAI rolls back our list to the point that our refereal list is empty, assign the ship a brand new
-     * AI and wait for the hooker to rehook the AI? NOPE!!!
+     * SOLUTION 2: If retrieveAI trims our list to empty, fall back to whatever AI the ship currently has.
+     * Only if that too is our own wrapper do we mint a fresh vanilla BasicShipAI.
      *
-     * SOLUTION 3: Trim the AI during the recursive hit. wait for it to roll back up and pass it ounce its resolved. As the
-     * end point of the recursive layers always ends in a BasicShipAI's getConfig, it shouldnt be possible to recurse endlessly.
-     * Seems to be working...
+     * PROBLEM 3 (0.2.20exp): Other mods (e.g. AI Tweaks) reassign the ship's AI — a fresh instance each
+     * time — whenever the core re-picks. Advancing our stored (now stale) copy trips vanilla
+     * BasicShipAI's "is being controlled by an AI that is assigned to something else" guard.
+     *
+     * SOLUTION 3: The wrapper's advance() adopts the AI currently assigned to the ship (if it is not
+     * our own wrapper) before the temporary swap, so we only ever advance the AI that the core
+     * currently considers assigned. If a reassignment still races us, the vanilla guard's
+     * RuntimeException is caught, the stale entry dropped, and the next frame re-syncs.
      */
 }
