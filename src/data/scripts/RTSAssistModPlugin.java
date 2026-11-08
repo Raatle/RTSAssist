@@ -144,7 +144,7 @@ public class RTSAssistModPlugin extends BaseModPlugin {
             put("orbitTangential", readHotKey(hotKeyFile, "orbitTangential", "T"));
             put("keepDistance", readHotKey(hotKeyFile, "keepDistance", "O"));
             /* Target-info lock (0.2.21exp); falls back to L for older hotkey files. */
-            put("lockTarget", readHotKey(hotKeyFile, "lockTarget", "L"));
+            put("lockTarget", readHotKey(hotKeyFile, "lockTarget", "R"));
         }};
         if (true) {
             this.hotKeys.put("param1", "H");
