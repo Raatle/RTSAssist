@@ -56,7 +56,7 @@
         },
         "RTSA_SettingsKeybind_keepDistance": {
             "label": "Keep Distance",
-            "tooltip": "Selected ships keep a fixed distance from the enemy ship under the cursor (85% of their longest direct-fire weapon range by default)."
+            "tooltip": "Selected ships keep a fixed distance from the enemy ship under the cursor (85%% of their longest direct-fire weapon range by default)."
         },
         "RTSA_SettingsKeybind_lockTarget": {
             "label": "Lock Target (view ship info)",
@@ -222,7 +222,7 @@
         },
         "RTSA_SettingsKeybind_keepDistance": {
             "label": "保持距离",
-            "tooltip": "所选舰船与光标处敌舰保持固定距离（默认为最长武器射程的 85%），适合风筝与保持阵型。"
+            "tooltip": "所选舰船与光标处敌舰保持固定距离（默认为最长武器射程的 85%%），适合风筝与保持阵型。"
         },
         "RTSA_SettingsKeybind_lockTarget": {
             "label": "锁定查看舰船信息",
