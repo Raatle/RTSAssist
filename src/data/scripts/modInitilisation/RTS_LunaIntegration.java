@@ -28,6 +28,9 @@ import lunalib.lunaSettings.LunaSettingsListener;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashMap;
 
 import static data.scripts.RTSAssistModPlugin.RTS_Global;
@@ -35,10 +38,13 @@ import static data.scripts.RTSAssistModPlugin.RTS_Global;
 public class RTS_LunaIntegration {
 
     String modID = "RTSAssist";
-    String hotKeyTabName = L("_tab_hotkeys");
-    String configTabName = L("_tab_settings");
-    String UITabName = L("_tab_render");
-    String DevToolsTabName = L("_tab_devtools");
+    /* Tab names are assigned in init() AFTER the string table is loaded - field initializers
+       would run at construction time, when the table is still null (they'd degrade to raw keys
+       like "_tab_hotkeys"). */
+    String hotKeyTabName = null;
+    String configTabName = null;
+    String UITabName = null;
+    String DevToolsTabName = null;
     HashMap<String, String> hotPointer = (HashMap<String, String>)RTSAssistModPlugin.RTS_Global.get("hotKeys");
     HashMap<String, Object> confPointer = (HashMap<String, Object>)RTSAssistModPlugin.RTS_Global.get("config");
 
@@ -46,6 +52,12 @@ public class RTS_LunaIntegration {
     /* ---- i18n: labels and tooltips come from data/config/RTSAssistStrings.json ---- */
     private org.json.JSONObject stringTable = null;
     private String uiLang = "en";
+    /* Loaded once per JVM - onApplicationEnabled can run more than once (and under the fr /
+     * Miko startup stack even from different loader threads); the second run must not end up
+     * with a worse table than the first. */
+    private static org.json.JSONObject CACHED_TABLE = null;
+    private static String CACHED_LANG = null;
+    private static boolean TABLE_TRIED = false;
 
     /* UI language: the Luna entry "RTSA_SettingsConfig_uiLanguage" (auto / en / zh) wins;
        "auto" follows the operating system language (zh -> Chinese, else English). */
@@ -64,29 +76,106 @@ public class RTS_LunaIntegration {
         return ("en");
     }
 
+    /* Loads the string table through three tiers, because resource resolution differs between
+     * setups (vanilla launcher vs the Miko/fr stack):
+     *   1. SettingsAPI.loadText(filename, modId) - deterministic per-mod lookup;
+     *   2. SettingsAPI.loadJSON(filename) - the legacy bare-name path;
+     *   3. direct file read via ModSpecAPI.getPath() - bypasses the VFS entirely.
+     * The result is cached JVM-wide; diagnostics go through log4j so they land in
+     * starsector.log (System.out goes to the launcher console only). */
     private void loadStrings() {
         this.uiLang = this.resolveLanguage();
-        try {
-            this.stringTable = Global.getSettings().loadJSON("RTSAssistStrings.json");
-        } catch (Exception e) {
-            this.stringTable = null;
+        if (TABLE_TRIED) {
+            this.stringTable = CACHED_TABLE;
+            this.uiLang = (CACHED_LANG != null ? CACHED_LANG : this.uiLang);
         }
-        System.out.println("RTSAssist: Luna settings language = " + this.uiLang);
+        else {
+            this.stringTable = this.loadStringTable();
+            TABLE_TRIED = true;
+            CACHED_TABLE = this.stringTable;
+            CACHED_LANG = this.uiLang;
+        }
+        Global.getLogger(RTS_LunaIntegration.class).info(
+                "LunaIntegration: language=" + this.uiLang
+                        + ", table=" + (this.stringTable == null ? "MISSING" : "loaded")
+                        + ", entries=" + this.countEntries()
+                        + ", sample=" + this.L("RTSA_SettingsKeybind_attackMove")
+                        + ", classFrom=" + this.getClass().getProtectionDomain().getCodeSource().getLocation()
+        );
     }
 
-    /* Label lookup; falls back to the field id when the table or the language is missing. */
+    /* Entry count of the active language section (0 when the table is missing). */
+    private int countEntries() {
+        try {
+            return (this.stringTable.getJSONObject(this.uiLang).length());
+        } catch (Throwable t) {
+            return (0);
+        }
+    }
+
+    private org.json.JSONObject loadStringTable() {
+        /* Tier 1: deterministic per-mod text load. */
+        try {
+            String text = Global.getSettings().loadText("data/config/RTSAssistStrings.json", "RTSAssist");
+            if (text != null && text.trim().length() > 2)
+                return (new org.json.JSONObject(text));
+        } catch (Throwable t) {
+            Global.getLogger(RTS_LunaIntegration.class).warn(
+                    "LunaIntegration: loadText tier failed: " + t.toString());
+        }
+        /* Tier 2: the legacy bare-name JSON load. */
+        try {
+            org.json.JSONObject o = Global.getSettings().loadJSON("RTSAssistStrings.json");
+            if (o != null && o.length() > 0)
+                return (o);
+        } catch (Throwable t) {
+            Global.getLogger(RTS_LunaIntegration.class).warn(
+                    "LunaIntegration: loadJSON tier failed: " + t.toString());
+        }
+        /* Tier 3: direct file read from the mod's install path. */
+        try {
+            String path = Global.getSettings().getModManager().getModSpec("RTSAssist").getPath();
+            if (path != null) {
+                File f = new File(path, "data/config/RTSAssistStrings.json");
+                if (f.exists()) {
+                    FileInputStream in = new FileInputStream(f);
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = in.read(buf)) > 0)
+                        out.write(buf, 0, n);
+                    in.close();
+                    return (new org.json.JSONObject(new String(out.toByteArray(), "UTF-8")));
+                }
+            }
+        } catch (Throwable t) {
+            Global.getLogger(RTS_LunaIntegration.class).warn(
+                    "LunaIntegration: direct-file tier failed: " + t.toString());
+        }
+        return (null);
+    }
+
+    /* Label lookup: the active language first, then English, then the field id. */
     private String L(String fieldID) {
         try {
             return (this.stringTable.getJSONObject(this.uiLang).getJSONObject(fieldID).getString("label"));
+        } catch (Throwable t) {
+        }
+        try {
+            return (this.stringTable.getJSONObject("en").getJSONObject(fieldID).getString("label"));
         } catch (Throwable t) {
             return (fieldID);
         }
     }
 
-    /* Tooltip lookup; falls back to empty. */
+    /* Tooltip lookup: the active language first, then English, then empty. */
     private String T(String fieldID) {
         try {
             return (this.stringTable.getJSONObject(this.uiLang).getJSONObject(fieldID).getString("tooltip"));
+        } catch (Throwable t) {
+        }
+        try {
+            return (this.stringTable.getJSONObject("en").getJSONObject(fieldID).getString("tooltip"));
         } catch (Throwable t) {
             return ("");
         }
@@ -96,6 +185,10 @@ public class RTS_LunaIntegration {
         if (!Global.getSettings().getModManager().isModEnabled("lunalib"))
             return;
         this.loadStrings();
+        this.hotKeyTabName = L("_tab_hotkeys");
+        this.configTabName = L("_tab_settings");
+        this.UITabName = L("_tab_render");
+        this.DevToolsTabName = L("_tab_devtools");
         this.addHotkeys();
         this.addConfig();
         /* Language selector - its own label/tooltip live in the string table as well
