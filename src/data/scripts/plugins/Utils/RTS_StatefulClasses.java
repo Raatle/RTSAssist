@@ -1,20 +1,22 @@
-/****************************************************************************************
- * RTSAssist version 0.1.5
- * Copyright (C) 2025, Raatle
+/*
+  **********************************************************************************************************
+  * RTSAssist version 0.2.04exp
+  * Copyright (C) 2025-2026, Raatle
 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
- ****************************************************************************************/
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
+  **********************************************************************************************************
+ */
 
 package data.scripts.plugins.Utils;
 
@@ -29,8 +31,15 @@ public class RTS_StatefulClasses {
         this.state.put("intHold", 1); // replace intHold with 0
     }
     public RTS_StatefulClasses(Object adoptState) {
-        this.isRestricted = false;
-        this.state = (HashMap<String, Object>)adoptState;
+        if (adoptState == null) {
+            this.isRestricted = false;
+            this.state = new HashMap<>();
+            this.state.put("intHold", 1); // replace intHold with 0
+        }
+        else {
+            this.isRestricted = false;
+            this.state = (HashMap<String, Object>)adoptState;
+        }
     }
     public RTS_StatefulClasses(Object adoptState, Object makeRestricted) {
         this.isRestricted = true;
@@ -46,13 +55,11 @@ public class RTS_StatefulClasses {
     private HashMap<String, Object> pointer;
     private String classStateIdentifier;
     public boolean isRestricted;
-    private static int uniqueIdentifier = 0;
+    private static Integer uniqueIdentifier = 0;
 
     public static String getUniqueIdentifier () {
         RTS_StatefulClasses.uniqueIdentifier++;
-        int ident = RTS_StatefulClasses.uniqueIdentifier;
-        //return (ident);
-        return (UUID.randomUUID().toString());
+        return (RTS_StatefulClasses.uniqueIdentifier.toString());
     }
 
     public HashMap<String, Object> returnState() {return(this.state);}

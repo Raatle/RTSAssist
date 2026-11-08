@@ -1,34 +1,31 @@
-/****************************************************************************************
- * RTSAssist version 0.1.5
- * Copyright (C) 2025, Raatle
+/*
+  **********************************************************************************************************
+  * RTSAssist version 0.2.10exp
+  * Copyright (C) 2025-2026, Raatle
 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
- ****************************************************************************************/
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
+  **********************************************************************************************************
+ */
 
 package data.scripts.plugins;
 
-import com.fs.starfarer.api.Global;
 import data.scripts.plugins.Setup.RTS_ParseInputKeyBinds;
 import data.scripts.plugins.Utils.*;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.util.vector.Vector2f;
 
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import com.fs.starfarer.api.combat.CombatEngineAPI;
 import com.fs.starfarer.api.combat.ShipAPI;
@@ -102,27 +99,59 @@ public class RTS_ParseInput extends RTS_StatefulClasses {
                 .get(RTSAssist.coNames.defaultModeIsRTS));
         init.put(RTS_ParseInput.stNames.pauseUnpause, (boolean)((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
                 .get(RTSAssist.coNames.pauseUnpause));
-        this.bindsEngine = new RTS_ParseInputKeyBinds(this.returnState());
+        this.keyBindsParser = new RTS_ParseInputKeyBinds(this.returnState());
         this.setState(init);
     }
 
-    RTS_ParseInputKeyBinds bindsEngine;
+    RTS_ParseInputKeyBinds keyBindsParser;
     HashMap<String, Object> bindsCheckList = new HashMap<>(50);
+    public enum interrupt {
+        LMB,
+        RMB,
+        Key
+    }
+    private class inputInterrupts {
+        boolean hasInterrupt = false;
+        boolean interruptLeftMB = false;
+        boolean interruptRightMB = false;
+        HashMap<String, Boolean> keyInterrupts = new HashMap<>() ;
+
+        public void reset () {
+            if (!this.hasInterrupt)
+                return;
+            this.hasInterrupt = false;
+            this.interruptLeftMB = false;
+            this.interruptRightMB = false;
+            this.keyInterrupts.forEach((k,v) -> v = false);
+        }
+    }
+    private inputInterrupts interruptStore = new inputInterrupts();
+
 
     private void processKeyboardEvents(InputEventAPI x) {
+        this.manageKeyInterrupts(x);
         this.bindsCheckList.clear();
-        this.bindsCheckList.put(
-                RTS_ParseInputKeyBinds.kiNames.inDevelopment,
-                this.getState(RTSAssist.stNames.inDevelopment
-        ));
-        this.bindsCheckList.put(RTS_ParseInputKeyBinds.kiNames.eventValue, x.getEventValue());
-        this.bindsEngine.setEventAPI(x);
-        this.bindsEngine.execBinds(this.bindsCheckList);
+        if (!x.isConsumed())
+            this.bindsCheckList.put(RTS_ParseInputKeyBinds.kiNames.eventValue, x.getEventValue());
+        this.keyBindsParser.setEventAPI(x);
+        this.keyBindsParser.execBinds(this.bindsCheckList);
     }
 
     private boolean manageModes (InputEventAPI x) {
         if (x.isKeyDownEvent()) {
             HashMap<String, Object> hotKeys = (HashMap<String, Object>)this.getState(RTSAssist.stNames.hotKeys);
+            /* Show/hide the minimap. Deliberately handled outside the RTSMode gate so it works in both modes. */
+            if (hotKeys.get(RTSAssist.hoNames.toggleMiniMap) != null
+                    && Keyboard.getKeyName(x.getEventValue()).equals(hotKeys.get(RTSAssist.hoNames.toggleMiniMap))
+            ) {
+                Object miniMapState = this.getState(RTSAssist.stNames.miniMapEnabled);
+                this.setState(
+                        RTSAssist.stNames.miniMapEnabled,
+                        !(miniMapState instanceof Boolean && (Boolean)miniMapState)
+                );
+                x.consume();
+                return (false);
+            }
             if ((hotKeys.get(RTSAssist.hoNames.enable_RTSMode) == null && x.getEventValue() == 58)
                     || Keyboard.getKeyName(x.getEventValue()).equals(hotKeys.get(RTSAssist.hoNames.enable_RTSMode))
             ) {
@@ -209,34 +238,38 @@ public class RTS_ParseInput extends RTS_StatefulClasses {
     private void LMBInputIfAltDown (InputEventAPI x) {
         ((RTS_SelectionListener)this.getState(RTSAssist.stNames.selectionListener)).prematurelyEndEvent();
         if (x.isLMBDownEvent()) {
-            this.setState(RTS_ParseInput.stNames.leftClickStore, this.getState(RTS_ParseInput.stNames.worldSpace));
-            if ((boolean)this.getState(RTS_ParseInput.stNames.isCtrlDown)) {
-                this.setState(
-                        RTS_ParseInput.stNames.leftClickStoreSec,
-                        getState(RTS_ParseInput.stNames.worldSpace)
-                );
+            if (!this.interruptStore.interruptLeftMB) {
+                this.setState(RTS_ParseInput.stNames.leftClickStore, this.getState(RTS_ParseInput.stNames.worldSpace));
+                if ((boolean)this.getState(RTS_ParseInput.stNames.isCtrlDown)) {
+                    this.setState(
+                            RTS_ParseInput.stNames.leftClickStoreSec,
+                            getState(RTS_ParseInput.stNames.worldSpace)
+                    );
+                }
             }
             x.consume();
         }
         else if(x.isLMBUpEvent()) {
-            if ((boolean)this.getState(RTS_ParseInput.stNames.isAltDown)
-                    && !(boolean)this.getState(RTS_ParseInput.stNames.isCtrlDown))
-                ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).translateAssignments(
-                        (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
-                        (Vector2f)this.getState(RTS_ParseInput.stNames.leftClickStore),
-                        (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
-                        false,
-                        (boolean)this.getState(RTS_ParseInput.stNames.isShiftDown)
-                );
-            else if ((boolean)this.getState(RTS_ParseInput.stNames.isAltDown)
-                    && (boolean)this.getState(RTS_ParseInput.stNames.isCtrlDown)) {
-                ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).rotateAssignments(
-                        (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
-                        (Vector2f)this.getState(RTS_ParseInput.stNames.leftClickStoreSec),
-                        (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
-                        false,
-                        (boolean)this.getState(RTS_ParseInput.stNames.isShiftDown)
-                );
+            if (!this.interruptStore.interruptLeftMB) {
+                if ((boolean)this.getState(RTS_ParseInput.stNames.isAltDown)
+                        && !(boolean)this.getState(RTS_ParseInput.stNames.isCtrlDown))
+                    ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).translateAssignments(
+                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                            (Vector2f)this.getState(RTS_ParseInput.stNames.leftClickStore),
+                            (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                            false,
+                            (boolean)this.getState(RTS_ParseInput.stNames.isShiftDown)
+                    );
+                else if ((boolean)this.getState(RTS_ParseInput.stNames.isAltDown)
+                        && (boolean)this.getState(RTS_ParseInput.stNames.isCtrlDown)) {
+                    ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).rotateAssignments(
+                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                            (Vector2f)this.getState(RTS_ParseInput.stNames.leftClickStoreSec),
+                            (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                            false,
+                            (boolean)this.getState(RTS_ParseInput.stNames.isShiftDown)
+                    );
+                }
             }
             this.setState(RTS_ParseInput.stNames.leftClickStore, null);
             this.setState(RTS_ParseInput.stNames.leftClickStoreSec, null);
@@ -249,114 +282,128 @@ public class RTS_ParseInput extends RTS_StatefulClasses {
 
     private void LMBInputIfCtrlDown (InputEventAPI x) {
         if (x.isLMBDownEvent()) {
-            ((RTS_TaskManager) this.getState(RTSAssist.stNames.taskManager)).editPriorityEnemy(
-                    (List<ShipAPI>) this.getState(RTS_ParseInput.stNames.currentSelection),
-                    (Vector2f) this.getState(RTS_ParseInput.stNames.worldSpace),
-                    true
-            );
+            if (!this.interruptStore.interruptLeftMB) {
+                ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).editPriorityEnemy(
+                        (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                        (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                        true
+                );
+            }
             x.consume();
         }
         else if (x.isLMBUpEvent() && this.getState(RTS_SelectionListener.stNames.beginEvent) != null) {
-            this.setState(
-                    RTS_ParseInput.stNames.currentSelection,
-                    ((RTS_SelectionListener)this.getState(RTSAssist.stNames.selectionListener)).createSelectionEvent(
-                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)
-                    ));
+            if (!this.interruptStore.interruptLeftMB) {
+                this.setState(
+                        RTS_ParseInput.stNames.currentSelection,
+                        ((RTS_SelectionListener)this.getState(RTSAssist.stNames.selectionListener)).createSelectionEvent(
+                                (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)
+                        ));
+            }
             x.consume();
         }
     }
 
     private void LMBInputNoModifiers (InputEventAPI x) {
         if (x.isLMBDownEvent()) {
-            ((RTS_SelectionListener)this.getState(RTSAssist.stNames.selectionListener)).beginEvent(x);
+            if (!this.interruptStore.interruptLeftMB)
+                ((RTS_SelectionListener)this.getState(RTSAssist.stNames.selectionListener)).beginEvent(x);
             x.consume();
         }
         else if (x.isLMBUpEvent()) {
-            this.setState(
-                    RTS_ParseInput.stNames.currentSelection,
-                    ((RTS_SelectionListener)this.getState(RTSAssist.stNames.selectionListener)).createSelectionEvent(
-                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)
-                    ));
+            if (!this.interruptStore.interruptLeftMB)
+                this.setState(
+                        RTS_ParseInput.stNames.currentSelection,
+                        ((RTS_SelectionListener)this.getState(RTSAssist.stNames.selectionListener)).createSelectionEvent(
+                                (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)
+                        )
+                );
+            else
+                this.setState(RTS_SelectionListener.stNames.beginEvent, null);
             x.consume();
         }
     }
 
     private void RMBInput (InputEventAPI x) {
         if (x.isRMBDownEvent()) {
-            if (x.isDoubleClick()) this.setState(RTS_ParseInput.stNames.DRMBFlag, true);
-            if (this.getState(RTS_ParseInput.stNames.currentSelection) != null
-                    && (((boolean)this.getState(RTS_TaskManager.stNames.combatStarted))
-                    || ((List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)).size() == 1)
-            ) {
-                if (!(boolean)this.getState(RTS_ParseInput.stNames.isShiftDown))
-                    ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).createAssignments(
-                            null,
-                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
-                            (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
-                            null,
-                            !(boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
-                            false,
-                            false,
-                            false,
-                            true
-                    );
-                else
-                    ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).queueAssignments(
-                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
-                            (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
-                            null,
-                            !(boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
-                            false
-                    );
+            if (!this.interruptStore.interruptRightMB){
+                if (x.isDoubleClick()) this.setState(RTS_ParseInput.stNames.DRMBFlag, true);
+                if (this.getState(RTS_ParseInput.stNames.currentSelection) != null
+                        && (((boolean)this.getState(RTS_TaskManager.stNames.combatStarted))
+                        || ((List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)).size() == 1)
+                ) {
+                    if (!(boolean)this.getState(RTS_ParseInput.stNames.isShiftDown))
+                        ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).createAssignments(
+                                null,
+                                (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                                (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                                null,
+                                !(boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
+                                false,
+                                false,
+                                false,
+                                true
+                        );
+                    else
+                        ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).queueAssignments(
+                                (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                                (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                                null,
+                                !(boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
+                                false
+                        );
+                }
+                this.setState(RTS_ParseInput.stNames.rightClickStore, this.getState(RTS_ParseInput.stNames.worldSpace));
+                this.setState(RTS_ParseInput.stNames.enemyStore, ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager))
+                        .getEnemies("primary", (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace), null));
+                this.setDeepState(
+                        Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.rightClickDelta),
+                        this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.start))
+                );
             }
-            this.setState(RTS_ParseInput.stNames.rightClickStore, this.getState(RTS_ParseInput.stNames.worldSpace));
-            this.setState(RTS_ParseInput.stNames.enemyStore, ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager))
-                    .getEnemies("primary", (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace), null));
-            this.setDeepState(
-                    Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.rightClickDelta),
-                    this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.start))
-            );
             x.consume();
         }
         else if (x.isRMBUpEvent() && this.getState(RTS_ParseInput.stNames.rightClickStore) != null) {
-            if (this.getState(RTS_ParseInput.stNames.currentSelection) != null &&
-                    ((List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)).size() > 1) {}
-//                System.out.println("RTSAssist: You attempted to RClick and drag multiple ships. This is not ready yet");
-            else if ((MathUtils.getDistance(
-                            (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
-                            (Vector2f)this.getState(RTS_ParseInput.stNames.rightClickStore)
-                    ) > 100f)
-                    && ((float)this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.start))
-                            - (this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.rightClickDelta)) == null
-                                    ? 0f
-                                    : (float)this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.rightClickDelta))
-                    ) > 0.2f)
-            ) {
-                if (!(boolean)this.getState(RTS_ParseInput.stNames.isShiftDown)) {
-                    ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).createAssignments(
-                            null,
-                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
-                            this.getState(RTS_ParseInput.stNames.enemyStore) == null
-                                    ? (Vector2f)this.getState(RTS_ParseInput.stNames.rightClickStore)
-                                    : ((ShipAPI)this.getState(RTS_ParseInput.stNames.enemyStore)).getLocation(),
-                            (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
-                            (boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
-                            false,
-                            false,
-                            false,
-                            true
-                    );
+            if (!this.interruptStore.interruptLeftMB) {
+                if (this.getState(RTS_ParseInput.stNames.currentSelection) != null &&
+                        ((List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)).size() > 1) {
                 }
-                else {
-                    ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).queueAssignments(
-                            (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
-                            this.getState(RTS_ParseInput.stNames.enemyStore) == null
-                                    ? (Vector2f)this.getState(RTS_ParseInput.stNames.rightClickStore)
-                                    : new Vector2f(((ShipAPI)this.getState(RTS_ParseInput.stNames.enemyStore)).getLocation()),
-                            (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
-                            (boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
-                            false
-                    );
+//                System.out.println("RTSAssist: You attempted to RClick and drag multiple ships. This is not ready yet");
+                else if (
+                        (MathUtils.getDistance(
+                                (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                                (Vector2f)this.getState(RTS_ParseInput.stNames.rightClickStore)
+                        ) > 100f)
+                        && ((float)this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.start))
+                                - (this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.rightClickDelta)) == null
+                                        ? 0f
+                                        : (float)this.getDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.rightClickDelta))
+                                ) > 0.2f)
+                ) {
+                    if (!(boolean)this.getState(RTS_ParseInput.stNames.isShiftDown)) {
+                        ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).createAssignments(
+                                null,
+                                (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                                this.getState(RTS_ParseInput.stNames.enemyStore) == null
+                                        ? (Vector2f)this.getState(RTS_ParseInput.stNames.rightClickStore)
+                                        : ((ShipAPI)this.getState(RTS_ParseInput.stNames.enemyStore)).getLocation(),
+                                (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                                (boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
+                                false,
+                                false,
+                                false,
+                                true
+                        );
+                    } else {
+                        ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).queueAssignments(
+                                (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                                this.getState(RTS_ParseInput.stNames.enemyStore) == null
+                                        ? (Vector2f)this.getState(RTS_ParseInput.stNames.rightClickStore)
+                                        : new Vector2f(((ShipAPI)this.getState(RTS_ParseInput.stNames.enemyStore)).getLocation()),
+                                (Vector2f)this.getState(RTS_ParseInput.stNames.worldSpace),
+                                (boolean)this.getState(RTS_ParseInput.stNames.DRMBFlag),
+                                false
+                        );
+                    }
                 }
             }
             this.setState(RTS_ParseInput.stNames.rightClickStore, null);
@@ -366,7 +413,77 @@ public class RTS_ParseInput extends RTS_StatefulClasses {
         }
     }
 
+    /* This contains the most bizzare bug I have ever seen. Has to be some sort of caching issue in the compiler or
+    * or starsector class loader. This second call of this function will call even if its preceding if statement in
+    * the next below function fails. This is evident by the fact testIter does not iterate and the functionality is
+    * observed during execution. Commenting out the the second call stops the observed behaviour.
+    * What is really odd is that simply changing the >location< param to >new Vector2f(location)< completely
+    * eliminates this strange behaviour and causes normal operation of the function.
+    * To top it off the function doesnt behave as it should. It places ships around the map. During deployment these
+    * ships cant be placed above the deployment line. When "stealth called", they can. I suspect their is more than one
+    * instance of RTSAssist and this somehow is accesing that hidden copy. Being able to deploy above the deployment line
+    * requires a state that only later on during the battle, governed by RTS_TaskManager.stNames.dRestrict and this is
+    * adjusted later on. The presence of the deployment line indicates that it has not been adjusted???
+    *
+    * KEEP THIS HERE AS A WARNING. Why is this happening? */
+
+//    private int testIter = 0;
+    private void testFunc (Vector2f location) {
+//        this.testIter++;
+        ((RTS_TaskManager)this.getState(RTSAssist.stNames.taskManager)).createAssignments(
+                null,
+                (List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection),
+                new Vector2f(location),
+                null,
+                true,
+                true,
+                false,
+                false,
+                true
+        );
+    }
+
+    public void preBuiltMoveAssignment(Vector2f location) {
+        if (
+                this.getState(RTS_ParseInput.stNames.currentSelection) != null
+                && (((boolean)this.getState(RTS_TaskManager.stNames.combatStarted))
+                || ((List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection)).size() == 1)
+        ) {
+            this.testFunc(location);
+        }
+    }
+
+    private void manageKeyInterrupts (InputEventAPI x) {
+        for (Map.Entry<String, Boolean> entry : this.interruptStore.keyInterrupts.entrySet())
+            if (
+                       entry.getValue()
+                    && Keyboard.getKeyName((int)x.getEventValue()).equals(entry.getKey())
+            )
+                x.consume();
+    }
+
+    public void queueInterrupt (interrupt type) {
+        this.queueInterrupt(type, null);
+    }
+    public void queueInterrupt (interrupt type, String keyString) {
+        if (type == interrupt.Key && keyString.equals(null))
+            throw new RuntimeException("RTSAssist: key type input interrupts cannot have value: null");
+        switch (type) {
+            case Key -> this.interruptStore.keyInterrupts.put(keyString, true);
+            case LMB -> this.interruptStore.interruptLeftMB = true;
+            case RMB -> this.interruptStore.interruptRightMB = true;
+        }
+        this.interruptStore.hasInterrupt = true;
+    }
+
     public void update (float amount, List<InputEventAPI> events) {
+        /* While the console overlay is open its text field receives the same keys as the
+         * mod's hotkeys; drop every event so typing cannot trigger RTS actions. */
+        if (RTS_ConsoleGuard.isConsoleOpen()) {
+            this.setState(RTS_ParseInput.stNames.rightClickStore, null);
+            this.setState(RTS_ParseInput.stNames.leftClickStore, null);
+            return;
+        }
         if (!this.preLoop())
             return;
         for (InputEventAPI x: events) {
@@ -389,6 +506,7 @@ public class RTS_ParseInput extends RTS_StatefulClasses {
                 this.RMBInput(x);
             }
         }
+        this.interruptStore.reset();
     }
 
     public void tempInterface() {

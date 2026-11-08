@@ -1,20 +1,22 @@
-/****************************************************************************************
- * RTSAssist version 0.1.5
- * Copyright (C) 2025, Raatle
+/*
+  **********************************************************************************************************
+  * RTSAssist version 0.2.12exp
+  * Copyright (C) 2025-2026, Raatle
 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
- ****************************************************************************************/
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
+  **********************************************************************************************************
+ */
 
 package data.scripts.plugins;
 
@@ -22,18 +24,13 @@ import java.util.*;
 import java.util.List;
 
 import API.RTS_API;
-import API.RTS_API_BroadsideBehaviour;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
-import com.fs.starfarer.api.ui.BaseTooltipCreator;
-import com.fs.starfarer.api.ui.TooltipMakerAPI;
-import com.fs.starfarer.api.ui.UIComponentAPI;
-import com.fs.starfarer.api.ui.UIPanelAPI;
-import com.fs.starfarer.launcher.StarfarerLauncherUI;
 import data.scripts.RTSAssistModPlugin;
 import data.scripts.modInitilisation.RTS_CommonsControl;
 import data.scripts.plugins.AISystems.RTS_AIInjector;
 import data.scripts.plugins.BroadsideModifiers.*;
 import data.scripts.plugins.DevTools.RTS_ShipTestSuite;
+import data.scripts.plugins.Render.RTS_RenderManager;
 import data.scripts.plugins.Utils.*;
 import lunalib.lunaSettings.LunaSettings;
 import lunalib.lunaSettings.LunaSettingsListener;
@@ -78,6 +75,8 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
         public String testSuite = RTS_StatefulClasses.getUniqueIdentifier();
         public String soundsManager = RTS_StatefulClasses.getUniqueIdentifier();
         public String broadsideSelection = RTS_StatefulClasses.getUniqueIdentifier();
+        public String renderManager = RTS_StatefulClasses.getUniqueIdentifier();
+        public String miniMapEnabled = RTS_StatefulClasses.getUniqueIdentifier();
     }
     public static classidentifiers stNames = new classidentifiers();
     /**/
@@ -98,6 +97,10 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
         public String scrollSmoothing = RTS_StatefulClasses.getUniqueIdentifier();
         public String scrollSpeedKeyboard = RTS_StatefulClasses.getUniqueIdentifier();
         public String scrollSmoothingKeyboard = RTS_StatefulClasses.getUniqueIdentifier();
+
+        public String minZoom = RTS_StatefulClasses.getUniqueIdentifier();
+        public String zoomSensitivity = RTS_StatefulClasses.getUniqueIdentifier();
+
         public String maxZoom = RTS_StatefulClasses.getUniqueIdentifier();
         public String screenScaling = RTS_StatefulClasses.getUniqueIdentifier();
         public String shipsWillRun = RTS_StatefulClasses.getUniqueIdentifier();
@@ -106,6 +109,10 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
         public String rememberZoom = RTS_StatefulClasses.getUniqueIdentifier();
         public String alternativeRotation = RTS_StatefulClasses.getUniqueIdentifier();
         public String UICommandVolume = RTS_StatefulClasses.getUniqueIdentifier();
+        public String miniMapEnabled = RTS_StatefulClasses.getUniqueIdentifier();
+        public String miniMapRefreshMs = RTS_StatefulClasses.getUniqueIdentifier();
+        public String miniMapSweepMs = RTS_StatefulClasses.getUniqueIdentifier();
+        public String fogOfWarEnabled = RTS_StatefulClasses.getUniqueIdentifier();
     }
     public static configIdentifiers coNames = new configIdentifiers();
     /**/
@@ -123,6 +130,10 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
         public String strafeCameraUp = RTS_StatefulClasses.getUniqueIdentifier();
         public String strafeCameraDown = RTS_StatefulClasses.getUniqueIdentifier();
         public String broadsideSelection = RTS_StatefulClasses.getUniqueIdentifier();
+        public String orbitRadial = RTS_StatefulClasses.getUniqueIdentifier();
+        public String orbitTangential = RTS_StatefulClasses.getUniqueIdentifier();
+        public String keepDistance = RTS_StatefulClasses.getUniqueIdentifier();
+        public String lockTarget = RTS_StatefulClasses.getUniqueIdentifier();
         public String param1 = RTS_StatefulClasses.getUniqueIdentifier();
         public String param2 = RTS_StatefulClasses.getUniqueIdentifier();
         public String param3 = RTS_StatefulClasses.getUniqueIdentifier();
@@ -131,6 +142,7 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
         public String param6 = RTS_StatefulClasses.getUniqueIdentifier();
         public String param7 = RTS_StatefulClasses.getUniqueIdentifier();
         public String param8 = RTS_StatefulClasses.getUniqueIdentifier();
+        public String toggleMiniMap = RTS_StatefulClasses.getUniqueIdentifier();
     }
     public static hotKeyIdentifiers hoNames = new hotKeyIdentifiers();
     /**/
@@ -186,6 +198,11 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
         this.setDeepState(Arrays.asList(RTSAssist.stNames.amount, RTSAssist.amNames.elapsedPlay), 0f);
         this.getHotkeys();
         this.getConfig();
+        /* Runtime toggle for the minimap; starts from config and is flipped by the hotkey.
+         * Config values live in the nested config map, hence getDeepState. */
+        Object miniMapConf = this.getDeepState(Arrays.asList(RTSAssist.stNames.config, RTSAssist.coNames.miniMapEnabled));
+        this.setState(RTSAssist.stNames.miniMapEnabled,
+                !(miniMapConf instanceof Boolean) || (Boolean)miniMapConf);
         if (Global.getSettings().getModManager().isModEnabled("lunalib"))
             LunaSettings.addSettingsListener(new LunaSettingsListener() {
                 @Override
@@ -210,6 +227,7 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
                 RTSAssist.stNames.testSuite,
                 (boolean)this.getState(RTSAssist.stNames.inDevelopment) ? new RTS_ShipTestSuite(this.state) : null
         );
+        initClasses.put(RTSAssist.stNames.renderManager, new RTS_RenderManager(this.state));
         this.setState(initClasses);
         this.setState(RTSAssist.stNames.isInit, true);
         inputParser = (RTS_ParseInput)this.getState(RTSAssist.stNames.parseInput);
@@ -228,6 +246,8 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
                 put(RTSAssist.coNames.scrollSmoothing, confPointer.get("scrollSmoothing")); //7f
                 put(RTSAssist.coNames.scrollSpeedKeyboard, confPointer.get("scrollSpeedKeyboard")); //20f
                 put(RTSAssist.coNames.scrollSmoothingKeyboard, confPointer.get("scrollSmoothingKeyboard")); //7f
+                put(RTSAssist.coNames.zoomSensitivity, confPointer.get("zoomSensi")); //1f
+                put(RTSAssist.coNames.minZoom, confPointer.get("minZoom")); //1f
                 put(RTSAssist.coNames.maxZoom, confPointer.get("maxZoom")); //3f
                 put(RTSAssist.coNames.screenScaling, confPointer.get("screenScaling"));
                 put(RTSAssist.coNames.switchRightClick, confPointer.get("switchRightClick"));
@@ -235,6 +255,10 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
                 put(RTSAssist.coNames.rememberZoom, confPointer.get("rememberZoom"));
                 put(RTSAssist.coNames.alternativeRotation, confPointer.get("alternativeRotation"));
                 put(RTSAssist.coNames.UICommandVolume, confPointer.get("UICommandVolume"));
+                put(RTSAssist.coNames.miniMapEnabled, confPointer.get("showMiniMap"));
+                put(RTSAssist.coNames.miniMapRefreshMs, confPointer.get("miniMapRefreshMs"));
+                put(RTSAssist.coNames.miniMapSweepMs, confPointer.get("miniMapSweepMs"));
+                put(RTSAssist.coNames.fogOfWarEnabled, confPointer.get("showFogOfWar"));
                 put(RTSAssist.devNames.modID, confPointer.get("modID"));
                 put(RTSAssist.devNames.findAllShips, confPointer.get("findAllShips"));
             }
@@ -245,6 +269,8 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
                 put(RTSAssist.coNames.scrollSmoothing, LunaSettings.getInt("RTSAssist", "RTSA_SettingsConfig_scrollSmoothing").floatValue()); //7f
                 put(RTSAssist.coNames.scrollSpeedKeyboard, LunaSettings.getInt("RTSAssist", "RTSA_SettingsConfig_scrollSpeedKeyboard").floatValue()); //20f
                 put(RTSAssist.coNames.scrollSmoothingKeyboard, LunaSettings.getInt("RTSAssist", "RTSA_SettingsConfig_scrollSmoothingKeyboard").floatValue()); //7f
+                put(RTSAssist.coNames.zoomSensitivity, MathUtils.clamp(LunaSettings.getDouble("RTSAssist", "RTSA_SettingsConfig_zoomSensi").floatValue(), 0.1f,  10f)); //1f
+                put(RTSAssist.coNames.minZoom, MathUtils.clamp(LunaSettings.getDouble("RTSAssist", "RTSA_SettingsConfig_minZoom").floatValue(), 0.1f,  10f)); //1f
                 put(RTSAssist.coNames.maxZoom, MathUtils.clamp(LunaSettings.getDouble("RTSAssist", "RTSA_SettingsConfig_maxZoom").floatValue(), 1f,  50f)); //3f
                 put(RTSAssist.coNames.screenScaling, LunaSettings.getInt("RTSAssist", "RTSA_SettingsConfig_screenScaling").floatValue());
                 put(RTSAssist.coNames.switchRightClick, LunaSettings.getBoolean("RTSAssist", "RTSA_SettingsConfig_switchRightClick"));
@@ -252,6 +278,10 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
                 put(RTSAssist.coNames.rememberZoom, LunaSettings.getBoolean("RTSAssist", "RTSA_SettingsConfig_rememberZoom"));
                 put(RTSAssist.coNames.alternativeRotation, LunaSettings.getBoolean("RTSAssist", "RTSA_SettingsConfig_alternativeRotation"));
                 put(RTSAssist.coNames.UICommandVolume, LunaSettings.getInt("RTSAssist", "RTSA_SettingsUI_CommandVolume").floatValue());
+                put(RTSAssist.coNames.miniMapEnabled, LunaSettings.getBoolean("RTSAssist", "RTSA_SettingsUI_showMiniMap"));
+                put(RTSAssist.coNames.miniMapRefreshMs, LunaSettings.getInt("RTSAssist", "RTSA_SettingsUI_miniMapRefreshMs").floatValue());
+                put(RTSAssist.coNames.miniMapSweepMs, LunaSettings.getInt("RTSAssist", "RTSA_SettingsUI_miniMapSweepMs").floatValue());
+                put(RTSAssist.coNames.fogOfWarEnabled, LunaSettings.getBoolean("RTSAssist", "RTSA_SettingsUI_showFogOfWar"));
                 put(RTSAssist.devNames.modID, LunaSettings.getString("RTSAssist","RTSA_SettingsDevTools_modID"));
                 put(RTSAssist.devNames.findAllShips, LunaSettings.getBoolean("RTSAssist", "RTSA_SettingsDevTools_findAllShips"));
             }
@@ -284,6 +314,11 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
                 put(RTSAssist.hoNames.strafeCameraUp, hotPointer.get("strafeCameraUp"));
                 put(RTSAssist.hoNames.strafeCameraDown, hotPointer.get("strafeCameraDown"));
                 put(RTSAssist.hoNames.broadsideSelection, hotPointer.get("broadsideSelection"));
+                put(RTSAssist.hoNames.orbitRadial, hotPointer.get("orbitRadial"));
+                put(RTSAssist.hoNames.orbitTangential, hotPointer.get("orbitTangential"));
+                put(RTSAssist.hoNames.keepDistance, hotPointer.get("keepDistance"));
+                put(RTSAssist.hoNames.lockTarget, hotPointer.get("lockTarget"));
+                put(RTSAssist.hoNames.toggleMiniMap, hotPointer.get("toggleMiniMap"));
             }
             else {
                 put(RTSAssist.hoNames.enable_RTSMode, LunaSettings.getInt(
@@ -304,6 +339,11 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
                 put(RTSAssist.hoNames.strafeCameraUp, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_strafeUp")));
                 put(RTSAssist.hoNames.strafeCameraDown, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_strafeDown")));
                 put(RTSAssist.hoNames.broadsideSelection, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_broadsideSelection")));
+                put(RTSAssist.hoNames.orbitRadial, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_orbitRadial")));
+                put(RTSAssist.hoNames.orbitTangential, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_orbitTangential")));
+                put(RTSAssist.hoNames.keepDistance, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_keepDistance")));
+                put(RTSAssist.hoNames.lockTarget, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_lockTarget")));
+                put(RTSAssist.hoNames.toggleMiniMap, Keyboard.getKeyName(LunaSettings.getInt("RTSAssist", "RTSA_SettingsKeybind_toggleMiniMap")));
             }
             put(RTSAssist.hoNames.param1, hotPointer.get("param1"));
             put(RTSAssist.hoNames.param2, hotPointer.get("param2"));
@@ -348,6 +388,7 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
         new RTS_SOTF().init();
         new RTS_Volkov().init();
         new RTS_ORA().init();
+        new RTS_Arma().init();
         hold.putAll(RTS_BS_Utils.getModifiers());
         hold.putAll(RTS_API.getSystemModifiers());
         this.setState(RTSAssist.stNames.blockedSystems, hold);
@@ -456,7 +497,8 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
     /* Checks to see if RTSAssist should be enabled and function */
     private boolean dontDoIt () {
         return (
-                (!(this.state != null
+                Global.getCurrentState().name().equals("TITLE")
+                || (!(this.state != null
                         && this.state.containsKey(RTSAssist.stNames.isInit)
                         && (Boolean)this.state.get(RTSAssist.stNames.isInit)))
                 || !(boolean)this.getState(RTSAssist.stNames.isEnabled)
@@ -483,7 +525,7 @@ public class RTSAssist extends BaseEveryFrameCombatPlugin {
             this.postInit();
         ((RTS_HandleTimeMult)this.getState(RTSAssist.stNames.handleTimeMult)).update();
         this.getTimers(amount);
-
+        ((RTS_RenderManager)this.getState(RTSAssist.stNames.renderManager)).advance();
         ((RTS_Draw)this.getState(RTSAssist.stNames.draw)).checkIfShouldDraw();
         ((RTS_Draw)this.getState(RTSAssist.stNames.draw)).open();
         ((RTS_SoundsManager)this.getState(RTSAssist.stNames.soundsManager)).update();

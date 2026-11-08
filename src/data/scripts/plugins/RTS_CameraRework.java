@@ -1,20 +1,22 @@
-/****************************************************************************************
- * RTSAssist version 0.1.5
- * Copyright (C) 2025, Raatle
+/*
+  **********************************************************************************************************
+  * RTSAssist version 0.2.04exp
+  * Copyright (C) 2025-2026, Raatle
 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
- ****************************************************************************************/
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
+  **********************************************************************************************************
+ */
 
 package data.scripts.plugins;
 
@@ -27,6 +29,7 @@ import java.util.List;
 import data.scripts.plugins.Utils.RTS_AssortedFunctions;
 import org.lazywizard.lazylib.VectorUtils;
 import org.lazywizard.lazylib.combat.CombatUtils;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.util.vector.Vector2f;
 
 import com.fs.starfarer.api.combat.CombatEngineAPI;
@@ -56,6 +59,7 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
         public String panVelocityKeyboard = RTS_StatefulClasses.getUniqueIdentifier();
         public String scrollSmoothing = RTS_StatefulClasses.getUniqueIdentifier();
         public String scrollSmoothingKeyboard = RTS_StatefulClasses.getUniqueIdentifier();
+        public String updated = RTS_StatefulClasses.getUniqueIdentifier();
     }
     public static classidentifiers stNames = new classidentifiers();
 
@@ -80,6 +84,7 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
             put(RTS_CameraRework.stNames.panVelocityKeyboard, null);
             put(RTS_CameraRework.stNames.scrollSmoothing, null);
             put(RTS_CameraRework.stNames.scrollSmoothingKeyboard, null);
+            put(RTS_CameraRework.stNames.updated, false);
         }};
         init.put(RTS_CameraRework.stNames.panVelocity, MathUtils.clamp((float)((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
                 .get(RTSAssist.coNames.scrollSpeed), 1f, 100f));
@@ -162,6 +167,7 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
                 }
         }
         this.render();
+        this.setState(RTS_CameraRework.stNames.updated, true);
     }
 
     private void initCameraXY () {
@@ -218,7 +224,12 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
         Vector2f hold = (Vector2f)this.getState(RTS_CameraRework.stNames.targetLLVec);
         if (hold == null)
             return;
-        float delta = (float)this.getState(RTS_CameraRework.stNames.panVelocityKeyboard) * (float)this.getState(RTS_CameraRework.stNames.targetZoom);
+        float delta = (float)this.getState(RTS_CameraRework.stNames.panVelocityKeyboard) * MathUtils.clamp(
+                (float)this.getState(RTS_CameraRework.stNames.targetZoom),
+                0.6f,
+                (float)(((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
+                        .get(RTSAssist.coNames.maxZoom))
+        );
         Vector2f pan = new Vector2f();
         if (strafeKeys.get(RTS_ParseInput.skNames.left) && !strafeKeys.get(RTS_ParseInput.skNames.right))
             pan.setX(-delta);
@@ -264,8 +275,12 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
         Vector2f hold = (Vector2f)this.getState(RTS_CameraRework.stNames.targetLLVec);
         if (hold == null)
             return;
-        float delta = (float)this.getState(RTS_CameraRework.stNames.panVelocity)
-                * (float)this.getState(RTS_CameraRework.stNames.targetZoom);
+        float delta = (float)this.getState(RTS_CameraRework.stNames.panVelocity) * MathUtils.clamp(
+                (float)this.getState(RTS_CameraRework.stNames.targetZoom),
+                0.6f,
+                (float)(((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
+                        .get(RTSAssist.coNames.maxZoom))
+        );
         Vector2f pan = new Vector2f();
         if (screenSpace.getX() <= 6f && screenSpace.getX() >= 0f)
             pan.setX(-delta);
@@ -362,8 +377,12 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
                 ((CombatEngineAPI)this.getState(RTSAssist.stNames.engine)).isUIShowingDialog())
             return;
         float tZoom = (float)this.getState(RTS_CameraRework.stNames.targetZoom);
-        float increment = (float)(((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
-                .get(RTSAssist.coNames.maxZoom)) / 12f;
+        float increment =
+                (float)(((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
+                        .get(RTSAssist.coNames.maxZoom))
+                * (float)(((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
+                        .get(RTSAssist.coNames.zoomSensitivity))
+                / 12f;
         tZoom = tZoom + (this.easeMachine(
                 this.zoomEaseBuffer,
                 zoom == 0
@@ -375,7 +394,8 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
                 RTS_CameraRework.stNames.targetZoom,
                 MathUtils.clamp(
                         tZoom,
-                        1f,
+                        (float)(((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
+                                .get(RTSAssist.coNames.minZoom)),
                         (float)(((HashMap<String, Object>)this.getState(RTSAssist.stNames.config))
                                 .get(RTSAssist.coNames.maxZoom))
                 )
@@ -399,12 +419,21 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
                 (totals.getX() / members.size()) - (sDimensions.getX() / 2),
                 (totals.getY() / members.size()) - (sDimensions.getY() / 2) + 500f
         );
-
         this.setState(RTS_CameraRework.stNames.targetLLVec, totals);
         this.setState(RTS_CameraRework.stNames.LLVec, totals);
         this.panXSmooth.hold = 0f;
         this.panYSmooth.hold = 0f;
+    }
 
+    public void zoomToLocation (Vector2f location) {
+        Vector2f sDimensions = (Vector2f)this.getState(RTS_CameraRework.stNames.sDimensions);
+        Vector2f amendedLoc = new Vector2f(
+                location.getX() - (sDimensions.getX() / 2),
+                location.getY() - (sDimensions.getY() / 2)
+        );
+
+        this.setState(RTS_CameraRework.stNames.targetLLVec, amendedLoc);
+        this.setState(RTS_CameraRework.stNames.LLVec, amendedLoc);
     }
 
     private float easeMachine(easeBuffer buffer, float increment, float delta) {
@@ -435,24 +464,25 @@ public class RTS_CameraRework extends RTS_StatefulClasses {
     }
 
     private boolean mouseOutOfBounds () {
-        Vector2f screenSpace = (Vector2f)this.getState(RTS_ParseInput.stNames.screenSpace);
-        Vector2f mFinal = new Vector2f(
-                ((Double)MouseInfo.getPointerInfo().getLocation().getX()).floatValue(),
-                ((Double)MouseInfo.getPointerInfo().getLocation().getY()).floatValue()
-        );
-        if (OOBHoldInst.screenSpace != null && OOBHoldInst.screenSpace.equals(screenSpace)) {
-            if (OOBHoldInst.mFinal != null && !OOBHoldInst.mFinal.equals(mFinal))
-                OOBHoldInst.blocking = true;
-        }
-        else
-            OOBHoldInst.blocking = false;
-        OOBHoldInst.screenSpace = screenSpace;
-        OOBHoldInst.mFinal = mFinal;
-        if (OOBHoldInst.blocking && OOBHoldInst.iter < 5)
-            OOBHoldInst.iter++;
-        if (!OOBHoldInst.blocking)
-            OOBHoldInst.iter = 0;
-        return (OOBHoldInst.iter > 4);
+//        Vector2f screenSpace = (Vector2f)this.getState(RTS_ParseInput.stNames.screenSpace);
+//        Vector2f mFinal = new Vector2f(
+//                ((Double)MouseInfo.getPointerInfo().getLocation().getX()).floatValue(),
+//                ((Double)MouseInfo.getPointerInfo().getLocation().getY()).floatValue()
+//        );
+//        if (OOBHoldInst.screenSpace != null && OOBHoldInst.screenSpace.equals(screenSpace)) {
+//            if (OOBHoldInst.mFinal != null && !OOBHoldInst.mFinal.equals(mFinal))
+//                OOBHoldInst.blocking = true;
+//        }
+//        else
+//            OOBHoldInst.blocking = false;
+//        OOBHoldInst.screenSpace = screenSpace;
+//        OOBHoldInst.mFinal = mFinal;
+//        if (OOBHoldInst.blocking && OOBHoldInst.iter < 5)
+//            OOBHoldInst.iter++;
+//        if (!OOBHoldInst.blocking)
+//            OOBHoldInst.iter = 0;
+        return (!Mouse.isInsideWindow());
+//        return (OOBHoldInst.iter > 4);
     }
     private class OOBHold {
             Vector2f screenSpace = null;

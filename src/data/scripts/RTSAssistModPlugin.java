@@ -1,20 +1,22 @@
-/****************************************************************************************
- * RTSAssist version 0.1.5
- * Copyright (C) 2025, Raatle
+/*
+  **********************************************************************************************************
+  * RTSAssist version 0.2.14exp
+  * Copyright (C) 2025-2026, Raatle
 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
- ****************************************************************************************/
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
+  **********************************************************************************************************
+ */
 
 package data.scripts;
 
@@ -59,6 +61,8 @@ public class RTSAssistModPlugin extends BaseModPlugin {
             put("scrollSmoothing", (float)configFile.getDouble("scrollSmoothing"));
             put("scrollSpeedKeyboard", (float)configFile.getDouble("scrollSpeedKeyboard"));
             put("scrollSmoothingKeyboard", (float)configFile.getDouble("scrollSmoothingKeyboard"));
+            put("zoomSensi", (float)configFile.getDouble("zoomSensi"));
+            put("minZoom", (float)configFile.getDouble("minZoom"));
             put("maxZoom", (float)configFile.getDouble("maxZoom"));
             put("screenScaling", (float)configFile.getDouble("screenScaling"));
             put("shipsWillRun", (boolean)configFile.getBoolean("shipsWillRun"));
@@ -68,6 +72,34 @@ public class RTSAssistModPlugin extends BaseModPlugin {
             put("UICommandVolume", (float)configFile.getDouble("UICommandVolume"));
             put("enableShipTestSuite", (boolean)configFile.getBoolean("enableShipTestSuite"));
             put("findAllShips", (boolean)configFile.getBoolean("findAllShips"));
+            /* Falls back to true for config files predating this option. */
+            boolean showMiniMap = true;
+            try {
+                showMiniMap = (boolean)configFile.getBoolean("showMiniMap");
+            } catch (JSONException ignored) {
+            }
+            put("showMiniMap", showMiniMap);
+            /* Falls back to 200 ms for config files predating this option. */
+            float miniMapRefreshMs = 1010f;
+            try {
+                miniMapRefreshMs = (float)configFile.getDouble("miniMapRefreshMs");
+            } catch (JSONException ignored) {
+            }
+            put("miniMapRefreshMs", miniMapRefreshMs);
+            /* Falls back to 300 ms for config files predating this option. */
+            float miniMapSweepMs = 200f;
+            try {
+                miniMapSweepMs = (float)configFile.getDouble("miniMapSweepMs");
+            } catch (JSONException ignored) {
+            }
+            put("miniMapSweepMs", miniMapSweepMs);
+            /* Falls back to true for config files predating this option. */
+            boolean showFogOfWar = true;
+            try {
+                showFogOfWar = (boolean)configFile.getBoolean("showFogOfWar");
+            } catch (JSONException ignored) {
+            }
+            put("showFogOfWar", showFogOfWar);
             if (configFile.getString("modID").isEmpty())
                 put("modID", "");
             else
@@ -97,6 +129,22 @@ public class RTSAssistModPlugin extends BaseModPlugin {
             put("moveTogether", ((Character)hotKeyFile.getString("moveTogether").charAt(0)).toString());
             put("attackMove", ((Character)hotKeyFile.getString("attackMove").charAt(0)).toString());
             put("broadsideSelection", ((Character)hotKeyFile.getString("broadsideSelection").charAt(0)).toString());
+            /* Falls back to "G" for hotkey files predating this option; empty disables the binding. */
+            String toggleMiniMap = "";
+            try {
+                toggleMiniMap = hotKeyFile.getString("toggleMiniMap");
+            } catch (JSONException ignored) {
+            }
+            if (toggleMiniMap.isEmpty())
+                put("toggleMiniMap", null);
+            else
+                put("toggleMiniMap", ((Character)toggleMiniMap.charAt(0)).toString());
+            /* Target orders (0.2.20exp); fall back to Z/T/O for hotkey files predating them. */
+            put("orbitRadial", readHotKey(hotKeyFile, "orbitRadial", "Z"));
+            put("orbitTangential", readHotKey(hotKeyFile, "orbitTangential", "T"));
+            put("keepDistance", readHotKey(hotKeyFile, "keepDistance", "O"));
+            /* Target-info lock (0.2.21exp); falls back to L for older hotkey files. */
+            put("lockTarget", readHotKey(hotKeyFile, "lockTarget", "L"));
         }};
         if (true) {
             this.hotKeys.put("param1", "H");
@@ -112,6 +160,16 @@ public class RTSAssistModPlugin extends BaseModPlugin {
         RTSAssistModPlugin.RTS_Global.put("config", this.config);
         RTSAssistModPlugin.RTS_Global.put("isEnabled", (boolean)configFile.getBoolean("isEnabled"));
         new RTS_LunaIntegration().init();
+    }
+
+    /* Reads a single hotkey entry; missing keys fall back to the given default, empty disables. */
+    private String readHotKey (JSONObject file, String key, String fallback) {
+        try {
+            String value = file.getString(key);
+            return (value.isEmpty() ? null : ((Character)value.charAt(0)).toString());
+        } catch (JSONException ignored) {
+            return (fallback);
+        }
     }
 
     @Override

@@ -1,20 +1,22 @@
-/****************************************************************************************
- * RTSAssist version 0.1.5
- * Copyright (C) 2025, Raatle
+/*
+  **********************************************************************************************************
+  * RTSAssist version 0.2.10exp
+  * Copyright (C) 2025-2026, Raatle
 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
- ****************************************************************************************/
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
+  **********************************************************************************************************
+ */
 
 package data.scripts.plugins;
 
@@ -48,6 +50,7 @@ public class RTS_SelectionListener extends RTS_StatefulClasses {
         public String selectionCounter = RTS_StatefulClasses.getUniqueIdentifier();
         public String hideShipInfo = RTS_StatefulClasses.getUniqueIdentifier();
         public String controlGroups = RTS_StatefulClasses.getUniqueIdentifier();
+        public String lockedShip = RTS_StatefulClasses.getUniqueIdentifier();
     }
     public static classidentifiers stNames = new RTS_SelectionListener.classidentifiers();
 
@@ -60,6 +63,7 @@ public class RTS_SelectionListener extends RTS_StatefulClasses {
             put(RTS_SelectionListener.stNames.selectionCounter, 0);
             put(RTS_SelectionListener.stNames.hideShipInfo, false);
             put(RTS_SelectionListener.stNames.controlGroups, new HashMap<>());
+            put(RTS_SelectionListener.stNames.lockedShip, null);
         }};
         this.setState(init);
         if ((float)this.getDeepState(Arrays.asList(RTSAssist.stNames.config, RTSAssist.coNames.screenScaling)) != 100f)
@@ -261,6 +265,9 @@ public class RTS_SelectionListener extends RTS_StatefulClasses {
     }
 
     public void showShipDetails (List<ShipAPI> concludedSelection) {
+        /* Any selection change releases the target-info lock (see lockShipUnderCursor). */
+        if (this.getState(RTS_SelectionListener.stNames.lockedShip) != null)
+            this.setState(RTS_SelectionListener.stNames.lockedShip, null);
         CombatEngineAPI engine = (CombatEngineAPI)this.getState(RTSAssist.stNames.engine);
         if (concludedSelection != null && concludedSelection.size() == 1)
         {
@@ -288,6 +295,38 @@ public class RTS_SelectionListener extends RTS_StatefulClasses {
             }
             this.setState(RTS_SelectionListener.stNames.hideShipInfo, true);
         }
+    }
+
+    /* Target-info lock (0.2.21exp): point at any ship and press the lock key to fan out its info
+       card, vanilla-R style. Reuses the single-selection display machinery (player-ship swap),
+       so the selection itself is untouched. Any selection change releases the lock (see
+       showShipDetails); the key toggles, and pressing it over empty space also releases. */
+    public void lockShipUnderCursor (ShipAPI ship) {
+        ShipAIPlugin aiHold = ship.getShipAI();
+        this.handleFloatieShift(ship);
+        ship.setShipAI(aiHold);
+        this.setState(RTS_SelectionListener.stNames.hideShip, ship);
+        this.setState(RTS_SelectionListener.stNames.hideShipInfo, false);
+        this.setState(RTS_SelectionListener.stNames.lockedShip, ship);
+        ((RTS_SoundsManager)this.getState(RTSAssist.stNames.soundsManager)).playBasicUISound(
+                "TargetEnemy",
+                1f,
+                0.5f
+        );
+    }
+
+    public void releaseLockedShip () {
+        if (this.getState(RTS_SelectionListener.stNames.lockedShip) == null)
+            return;
+        this.setState(RTS_SelectionListener.stNames.lockedShip, null);
+        /* showShipDetails re-asserts the display per the current selection (single selection shows
+           that ship again, otherwise the card is hidden and the command shuttle is restored). */
+        this.showShipDetails((List<ShipAPI>)this.getState(RTS_ParseInput.stNames.currentSelection));
+        ((RTS_SoundsManager)this.getState(RTSAssist.stNames.soundsManager)).playBasicUISound(
+                "Deselect",
+                1f,
+                0.5f
+        );
     }
 
     public void handleFloatieShift (ShipAPI shipTarget) {
@@ -385,7 +424,7 @@ public class RTS_SelectionListener extends RTS_StatefulClasses {
                         || x.isStation()
                         || x.isAlly()
                         || x.getName() == null
-                        || x.getName().equals("Command Shuttle")
+                        || x.isShuttlePod()
                         || x.getHullSize() == null
         );
     }

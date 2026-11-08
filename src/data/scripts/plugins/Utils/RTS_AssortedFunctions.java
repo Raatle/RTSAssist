@@ -1,20 +1,22 @@
-/****************************************************************************************
- * RTSAssist version 0.1.5
- * Copyright (C) 2025, Raatle
+/*
+  **********************************************************************************************************
+  * RTSAssist version 0.2.04exp
+  * Copyright (C) 2025-2026, Raatle
 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
- ****************************************************************************************/
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
+  **********************************************************************************************************
+ */
 
 package data.scripts.plugins.Utils;
 
@@ -59,8 +61,12 @@ public class RTS_AssortedFunctions {
         return (type.equals('x') ? new vectorComparatorX() : type.equals('y') ? new vectorComparatorY() : null);
     }
 
-    public static float fastSqrt (float var) { return ((float)fastSqrt((int)var)); }
-    public static double fastSqrt (double var) { return ((double)fastSqrt((int)var)); }
+    public static float fastSqrt (float var) {
+        return ((float)fastSqrt((int)var));
+    }
+    public static double fastSqrt (double var) {
+        return ((double)fastSqrt((int)var));
+    }
     public static int fastSqrt (int var) {
         if (var <= 0)
             return (0);
@@ -95,11 +101,15 @@ public class RTS_AssortedFunctions {
     }
 
     public static double getDistanceSquared(Vector2f start, Vector2f end) {
+        getDistanceSquared_X = Math.abs(start.getX() - end.getX());
+        getDistanceSquared_Y = Math.abs(start.getY() - end.getY());
         return (
-                (Math.pow(Math.abs(start.getX() - end.getX()), 2)
-                + Math.pow(Math.abs(start.getY() - end.getY()), 2))
+                  (getDistanceSquared_X * getDistanceSquared_X)
+                + (getDistanceSquared_Y * getDistanceSquared_Y)
         );
     }
+    private static float getDistanceSquared_X;
+    private static float getDistanceSquared_Y;
 
     public static int fastGetDistance(Vector2f start, Vector2f end) {
         return ((int)fastSqrt(getDistanceSquared(start, end)));

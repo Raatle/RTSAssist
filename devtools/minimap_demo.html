@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RTSAssist Minimap Effect Preview (Opacity-Time Curve)</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #05070c;
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color: #cfd8e3; }
+  #stage { position: absolute; inset: 0; }
+  canvas { display: block; }
+  #panel {
+    position: absolute; top: 0; right: 0; width: 352px; height: 100%;
+    background: rgba(10, 14, 22, 0.92); border-left: 1px solid #1d2a3a;
+    padding: 14px 16px; overflow-y: auto; font-size: 12.5px;
+  }
+  #panel h1 { font-size: 15px; color: #7fd4ff; margin-bottom: 2px; letter-spacing: 1px; }
+  #panel .sub { color: #5c6b7d; font-size: 11px; margin-bottom: 12px; }
+  .group { border-top: 1px solid #16202e; padding: 10px 0 4px; }
+  .group b { display: block; color: #8fa3b8; font-size: 12px; margin-bottom: 8px; letter-spacing: 1px; }
+  .row { display: flex; align-items: center; margin: 6px 0; gap: 8px; }
+  .row label { flex: 0 0 104px; color: #a8b8c9; }
+  .row input[type=range] { flex: 1; accent-color: #4f9dff; }
+  .row .val { flex: 0 0 56px; text-align: right; color: #7fd4ff; font-variant-numeric: tabular-nums; font-size: 11.5px; }
+  .row select { flex: 1; background: #0d1520; color: #cfd8e3; border: 1px solid #24344a; padding: 2px; }
+  .row input[type=checkbox] { accent-color: #4f9dff; }
+  .btns { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+  button { background: #12202f; color: #9fc6e8; border: 1px solid #27425f; padding: 4px 10px;
+    cursor: pointer; font-size: 12px; }
+  button:hover { background: #1a3049; }
+  #javaBox { width: 100%; height: 150px; background: #0a0f16; color: #9ece9e; border: 1px solid #1d2a3a;
+    font-family: Consolas, monospace; font-size: 11px; padding: 6px; white-space: pre; overflow: auto; }
+  #timeline { position: absolute; left: 0; right: 352px; bottom: 14px;
+    margin: 0 auto; width: 420px; background: rgba(10,14,22,0.85); border: 1px solid #1d2a3a; padding: 6px 8px; }
+  #timeline .bar { display: flex; height: 10px; }
+  #timeline .seg { opacity: 0.35; }
+  #timeline .seg.sweepS { background: #35c24a; }
+  #timeline .seg.holdS  { background: #1d5c2a; }
+  #timeline .seg.sweepF { background: #d44a3a; }
+  #timeline .seg.holdF  { background: #5c241d; }
+  #timeline .cursor { position: absolute; top: 4px; bottom: 4px; width: 2px; background: #fff; }
+  #timeline .cap { display: flex; justify-content: space-between; font-size: 10px; color: #5c6b7d; margin-top: 3px; }
+  #timeline .dbg { font-size: 10px; color: #7fd4ff; margin-top: 3px; }
+  .hint { color: #5c6b7d; font-size: 11px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv"></canvas></div>
+
+<div id="timeline">
+  <div class="bar">
+    <div class="seg sweepS" style="flex:1"></div><div class="seg holdS" style="flex:1"></div>
+    <div class="seg sweepF" style="flex:1"></div><div class="seg holdF" style="flex:1"></div>
+    <div class="seg sweepS" style="flex:1"></div><div class="seg holdS" style="flex:1"></div>
+    <div class="seg sweepF" style="flex:1"></div><div class="seg holdF" style="flex:1"></div>
+    <div class="seg sweepS" style="flex:1"></div><div class="seg holdS" style="flex:1"></div>
+    <div class="seg sweepF" style="flex:1"></div><div class="seg holdF" style="flex:1"></div>
+  </div>
+  <div class="cursor" id="cursor" style="left:0"></div>
+  <div class="cap"><span>&larr; Cycle 1</span><span>Cycle 2</span><span>Cycle 3 &rarr;</span></div>
+  <div class="cap" style="margin-top:0"><span>Sweep ships &rarr; hold &rarr; sweep fighters &rarr; hold, repeating</span></div>
+  <div class="dbg" id="dbg">Drawn this frame: ships 0 · fighters 0</div>
+</div>
+
+<div id="panel">
+  <h1>Minimap Effect Preview</h1>
+  <div class="sub">Parameters match the in-mod formulas · Once tuned, copy the generated Java snippet below into RTS_MiniMapRenderer</div>
+
+  <div class="group"><b>Sweep Timing</b>
+    <div class="row"><label>Cycle period (ms)</label><input type="range" id="cycleMs" min="200" max="2000" step="10" value="1000"><span class="val" id="cycleMsV">1000</span></div>
+    <div class="row"><label>Sweep duration (ms)</label><input type="range" id="sweepMs" min="20" max="500" step="10" value="300"><span class="val" id="sweepMsV">300</span></div>
+    <div class="row"><label>Sweep order</label><select id="orderMode">
+        <option value="random">Random order</option>
+        <option value="flagship">Nearest-to-flagship first (pulse wave)</option>
+      </select></div>
+    <div class="hint">Cycle structure: sweep ships &rarr; hold &rarr; sweep fighters &rarr; hold, repeating.<br>
+      Cycle boundaries refresh nothing; a unit's current position is read only when its turn comes to stamp it (position refresh + highlight at the same instant),
+      and the stamp stays in place for 3 cycles. A unit's older stamps fade out where they were left = motion trail.</div>
+  </div>
+
+  <div class="group"><b>Opacity-Time Curve (highlight = the refresh itself)</b>
+    <canvas id="curveEd" style="width:100%; height:180px"></canvas>
+    <div class="btns">
+      <button id="btnCurveReset">Reset curve</button>
+      <button id="btnCurvePulse">Pulse wave preset</button>
+      <button id="btnCurveLinger">Long afterglow preset</button>
+    </div>
+    <div class="hint">X axis: time since the stamp (0 = the hit instant, 1 = three cycles later). Y axis: opacity.<br>
+      Drag control points to reshape the curve; click empty space to add a point; double-click a control point to remove it.<b>Stamps stay in place for 3 cycles; the right end of the curve = afterglow brightness at the end of cycle 3.</b></div>
+  </div>
+
+  <div class="group"><b>Units and Lines</b>
+    <div class="row"><label>Speed line length (ships)</label><input type="range" id="shipLine" min="2" max="20" step="1" value="10"><span class="val" id="shipLineV">10%</span></div>
+    <div class="row"><label>Fighter speed line factor</label><input type="range" id="fiLine" min="0.1" max="1" step="0.05" value="0.45"><span class="val" id="fiLineV">0.45</span></div>
+    <div class="row"><label>Ships per side</label><input type="range" id="nShip" min="2" max="24" step="1" value="9"><span class="val" id="nShipV">9</span></div>
+    <div class="row"><label>Fighters per side</label><input type="range" id="nFi" min="0" max="40" step="1" value="14"><span class="val" id="nFiV">14</span></div>
+    <div class="row"><label>Show speed lines</label><input type="checkbox" id="showVel" checked></div>
+    <div class="row"><label>Show objectives</label><input type="checkbox" id="showObj" checked></div>
+    <div class="row"><label>Show view frame</label><input type="checkbox" id="showVP" checked></div>
+  </div>
+
+  <div class="group"><b>Controls</b>
+    <div class="btns">
+      <button id="btnPause">Pause</button>
+      <button id="btnShuffle">Reshuffle</button>
+      <button id="btnReset">Reset parameters</button>
+    </div>
+    <div class="hint">Single-click on the minimap to preview the right-click order marker animation.</div>
+  </div>
+
+  <div class="group"><b>Migration to mod (auto-generated)</b>
+    <div id="javaBox"></div>
+    <div class="btns"><button id="btnCopy">Copy Java snippet</button></div>
+    <div class="hint">Paste the copied snippet into RTS_MiniMapRenderer.java / Config.ini / the Luna settings, then update the mods directory.</div>
+  </div>
+</div>
+
+<!-- Split scripts: parameters/constants -> battle simulation -> sweep rendering -> control bindings -->
+<script src="demo_params.js?v=16"></script>
+<script src="demo_sim.js?v=16"></script>
+<script src="demo_sweep.js?v=16"></script>
+<script src="demo_panel.js?v=16"></script>
+</body>
+</html>

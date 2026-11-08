@@ -2,8 +2,8 @@
     "id":"RTSAssist",
     "name":"RTSAssist",
     "author":"Raatle",	
-    "version":"0.1.9",
-    "description":"An RTS conversion for Starsector",
+    "version":"0.2.22exp",
+    "description":"An RTS conversion for Starsector / 《远行星号》即时战略（RTS）操作转换模组",
     "gameVersion": "0.98a-RC8",
 	"utility": "true",
     "dependencies": [

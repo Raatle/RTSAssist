@@ -1,5 +1,14 @@
 {
     "plugins":{
         "RTSAssist":"data.scripts.plugins.RTSAssist"
-    }
+    },
+	"graphics": {
+		"RTS_miniMap": {
+			"background":  "graphics/backgrounds/pexels-3d-render-1058120333-33441877_trimmed.jpg",
+		},
+		"RTS_ui" :{
+			"comm_relay": "graphics/warroom/objective_comm_relay.png",
+			"objIconNull": "graphics/ui/icons/64x_crossed_circle2.png", 
+		},
+	},
 }
